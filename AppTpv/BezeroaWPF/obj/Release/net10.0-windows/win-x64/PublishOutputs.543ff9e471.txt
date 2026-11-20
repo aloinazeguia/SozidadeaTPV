@@ -1,0 +1,7 @@
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/AppTpv.pdb
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/D3DCompiler_47_cor3.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/PenImc_cor3.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/PresentationNative_cor3.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/vcruntime140_cor3.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/wpfgfx_cor3.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/publish_vm/AppTpv.exe

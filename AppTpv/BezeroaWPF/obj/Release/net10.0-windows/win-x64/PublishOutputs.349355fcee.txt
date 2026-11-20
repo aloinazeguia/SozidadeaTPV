@@ -1,0 +1,5 @@
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/bin/Release/net10.0-windows/win-x64/publish/AppTpv.exe
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/bin/Release/net10.0-windows/win-x64/publish/AppTpv.dll
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/bin/Release/net10.0-windows/win-x64/publish/AppTpv.deps.json
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/bin/Release/net10.0-windows/win-x64/publish/AppTpv.runtimeconfig.json
+/Users/Anetxu/Soziedadea/AppTpv/ClienteWPF/bin/Release/net10.0-windows/win-x64/publish/AppTpv.pdb
