@@ -1,5 +1,5 @@
 // ============================================================
-//  AppTpv — TCP zerbitzaria (enuntziatuaren 3. eskaria)
+//          AppTpv — TCP zerbitzaria 
 //  * 5001 portuan TcpListener erabiltzen da
 //  * aldi berean 10 bezero maximo
 //  * bezero bakoitzerako hari bat: zerbitzaria erantzuten bitartean,
@@ -20,8 +20,8 @@ public class TCPZerbitzaria
     // Eraikitzailea pribatua mantentzen da; singleton patroia erabili nahi delako.
     private TCPZerbitzaria() { }
 
-    // Zerbitzariaren instantzia bakarra, sistema osoan erabili ahal dena.
-    public static readonly TCPZerbitzaria Instantzia = new();
+    // Zerbitzariaren bezeroharia bakarra, sistema osoan erabili ahal dena.
+    public static readonly TCPZerbitzaria ZerbitzariHaria = new();
     // Uneko konektatutako bezero kopurua. Harien arteko sarrerak babesteko int da.
     private int _bezeroak;
 

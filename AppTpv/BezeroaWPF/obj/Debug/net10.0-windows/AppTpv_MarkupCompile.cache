@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-/Users/Anetxu/Desktop/SoziedadeaTPV/AppTpv/BezeroaWPF/obj/Debug/net10.0-windows/
+/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/obj/Debug/net10.0-windows/
 BezeroaWPF
 none
 false
 TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-/Users/Anetxu/Desktop/SoziedadeaTPV/AppTpv/BezeroaWPF/App.xaml
-72084785730
+/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/App.xaml
+8272134816
 
-15-253923017
+161726257993
 206-1133171834
-Ikuspegiak/ErabiltzaileIkuspegia.xaml;Ikuspegiak/ErreserbaIkuspegia.xaml;Ikuspegiak/IzakinIkuspegia.xaml;Ikuspegiak/KontsumizioIkuspegia.xaml;Leihoak/KopuruLeihoa.xaml;Leihoak/LeihoNagusia.xaml;Leihoak/SaioHasieraLeihoa.xaml;
+Ikuspegiak/ErabiltzaileIkuspegia.xaml;Ikuspegiak/ErreserbaIkuspegia.xaml;Ikuspegiak/IzakinIkuspegia.xaml;Ikuspegiak/KontsumizioIkuspegia.xaml;Ikuspegiak/MahaiMapaIkuspegia.xaml;Leihoak/KopuruLeihoa.xaml;Leihoak/LeihoNagusia.xaml;Leihoak/SaioHasieraLeihoa.xaml;
 
 True
 

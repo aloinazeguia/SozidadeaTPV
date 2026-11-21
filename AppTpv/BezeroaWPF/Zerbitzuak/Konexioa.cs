@@ -7,15 +7,11 @@
 //  { ekintza, token, datuak }; erantzuna, berriz, { arrakasta, datuak?, errorea? }.
 //
 //  Blokeoaren bidez bidalketak sekuentziatzen dira; deiak sinkronoak dira
-//  (zerbitzariak milisegundo gutxitan erantzuten du sare lokalean).
 // ============================================================
-// Fitxategiak eta streamak erabiltzeko izen-eremua inportatzen da.
+
 using System.IO;
-// TCP bezeroa erabiltzeko izen-eremua inportatzen da.
 using System.Net.Sockets;
-// Testua kodetu eta deskodetzeko izen-eremua inportatzen da.
 using System.Text;
-// JSON mezuak serializatu eta aztertzeko izen-eremua inportatzen da.
 using System.Text.Json;
 
 // Bezeroaren zerbitzu-klaseen izen-eremua zehazten da.
@@ -35,11 +31,11 @@ public class Erantzuna
 // TCP konexioa eta eskaeren bidalketa kudeatzeko klase estatikoa definitzen da.
 public static class Konexioa
 {
-    // Windows makina birtualean ostalariaren (Mac-aren) IP helbidea erabili behar da,
+    // Windows makina birtualean zerbitzariaren (Mac-aren) IP helbidea erabili behar da,
     // ez 127.0.0.1. Helbidea zerbitzari.txt fitxategian ezar daiteke,
     // exekutagarriaren karpetan, lehen lerroan: IP [:portua].
     // Ostalari-izen lehenetsia localhost da.
-    public static string Ostalaria = "127.0.0.1";
+    public static string Zerbitzaria = "127.0.0.1";
     // Zerbitzariaren TCP ataka lehenetsia gordetzen da.
     public static int Ataka = 5001;
 
@@ -69,8 +65,8 @@ public static class Konexioa
                 {
                     // Lerroa bi puntuen arabera zatitzen da, IP helbidea eta ataka bereizteko.
                     var zatiak = lehenengoa.Split(':');
-                    // Lehen zatia dagoen eta hutsik ez dagoen egiaztatu ondoren, ostalaria ezartzen da.
-                    if (zatiak.Length >= 1 && zatiak[0] != "") Ostalaria = zatiak[0];
+                    // Lehen zatia dagoen eta hutsik ez dagoen egiaztatu ondoren, zerbitzaria ezartzen da.
+                    if (zatiak.Length >= 1 && zatiak[0] != "") Zerbitzaria = zatiak[0];
                     // Bigarren zatia zenbaki oso balioduna bada, ataka eguneratzen da.
                     if (zatiak.Length >= 2 && int.TryParse(zatiak[1], out var p)) Ataka = p;
                 }
@@ -173,7 +169,7 @@ public static class Konexioa
         // TCP bezero berria sortzen da zerbitzariarekin konektatzeko.
         _bezeroa = new TcpClient();
         // Konexioa modu asinkronoan abiarazten da.
-        var zeregina = _bezeroa.ConnectAsync(Ostalaria, Ataka);
+        var zeregina = _bezeroa.ConnectAsync(Zerbitzaria, Ataka);
         // Bost segundo igaro eta konektatu ez bada, denbora-muga errorea sortzen da.
         if (!zeregina.Wait(5000))
             throw new SocketException((int)SocketError.TimedOut);

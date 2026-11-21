@@ -46,7 +46,7 @@ public static class Saioak
      * @returns Saio-tokena baliozkoa bada, saioaren datuak; bestela null.
      */
     public static ErabiltzaileSaioa? Lortu(string? token)
-        => token != null && Aktiboak.TryGetValue(token, out var s) ? s : null;
+        => token != null && Aktiboak.TryGetValue(token, out var saioa) ? saioa : null;
 
     /**
      * Erabiltzailearen saioa itxi eta bere tokena saio aktiboen diccionarioan ezabatzen du.
