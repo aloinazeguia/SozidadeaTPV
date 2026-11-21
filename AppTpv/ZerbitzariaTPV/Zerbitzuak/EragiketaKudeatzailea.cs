@@ -42,7 +42,7 @@ public static class EragiketaKudeatzailea
                 "USUARIOS_LISTA"      => AdminEskatzenDu(saioa, () => Erab_Zerrenda()),
 
                 // ---- Mahaiak eta erreserbak (erabiltzaile arrunta) ----
-                "MESAS_LISTA"         => SaioaEskatzenDu(saioa, () => Mahaiak_Zerrenda()),
+                "MESAS_LISTA"         => SaioaEskatzenDu(saioa, () => Mahaiak_Zerrenda(datuak)),
                 "RESERVA_CREAR"       => SaioaEskatzenDu(saioa, () => Erres_Sortu(saioa!, datuak)),
                 "RESERVA_MODIFICAR"   => SaioaEskatzenDu(saioa, () => Erres_Aldatu(saioa!, datuak)),
                 "RESERVA_BORRAR"      => SaioaEskatzenDu(saioa, () => Erres_Ezabatu(saioa!, datuak)),
@@ -355,8 +355,16 @@ public static class EragiketaKudeatzailea
     //    MAHAIAK ETA ERRESERBAK (requisito 1.5 y 4)
     // =====================================================
 
-    private static Emaitza Mahaiak_Zerrenda()
+    private static Emaitza Mahaiak_Zerrenda(JsonElement d)
     {
+        var data = KateaAukerakoa(d, "data");
+        if (string.IsNullOrWhiteSpace(data))
+            data = DateTime.Today.ToString("yyyy-MM-dd");
+
+        if (!DateTime.TryParseExact(data, "yyyy-MM-dd", null,
+                System.Globalization.DateTimeStyles.None, out _))
+            return Emaitza.Txar("Datak YYYY-MM-DD formatua izan behar du");
+
         using var konexioa = DatuBasea.Konektatu();
         konexioa.Open();
         using var agindua = konexioa.CreateCommand();
@@ -366,11 +374,12 @@ public static class EragiketaKudeatzailea
             SELECT m.id, m.numMesa, m.capacidad,
                    (SELECT COUNT(*) FROM Reserva r
                      WHERE r.idMesa = m.id AND r.estado = 'activa'
-                       AND (r.fecha IS NULL OR r.fecha = date('now'))) AS erreserbak,
+                       AND (r.fecha IS NULL OR r.fecha = @data)) AS erreserbak,
                    (SELECT p.id FROM Pedido p
                      WHERE p.idMesa = m.id AND p.estado = 'abierta'
                      ORDER BY p.id DESC LIMIT 1) AS eskaeraId
               FROM Mesa m ORDER BY m.numMesa";
+        agindua.Parameters.AddWithValue("@data", data);
         var zerrenda = new List<object>();
         using var r = agindua.ExecuteReader();
         while (r.Read())

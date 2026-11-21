@@ -16,6 +16,8 @@ namespace BezeroaWPF.Ikuspegiak;
 public partial class MahaiMapaIkuspegia : UserControl
 {
     private MahaiDatuak? _hautatutakoMahia;
+    private bool _sinkronizatuta;
+    private bool _kargatuta;
 
     public MahaiMapaIkuspegia()
     {
@@ -23,7 +25,37 @@ public partial class MahaiMapaIkuspegia : UserControl
         // Egutegian gaurtik aurrerako egunak bakarrik hauta daitezke
         DtpData.DisplayDateStart = DateTime.Today;
         DtpData.DisplayDate = DateTime.Today;
-        Loaded += (_, _) => Kargatu();
+        DtpDataIragazkia.SelectedDate = DateTime.Today;
+        Loaded += MahaiMapaIkuspegia_Loaded;
+        Unloaded += MahaiMapaIkuspegia_Unloaded;
+    }
+
+    private void MahaiMapaIkuspegia_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_sinkronizatuta) return;
+        _sinkronizatuta = true;
+        ErreserbaIkuspegia.ErreserbakAldatuDira += ErreserbakAldatuDira;
+        Konexioa.DatuakAldatuDira += ErreserbakAldatuDira;
+        Kargatu();
+        Eguneratu();
+        _kargatuta = true;
+    }
+
+    private void MahaiMapaIkuspegia_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (!_sinkronizatuta) return;
+        _sinkronizatuta = false;
+        ErreserbaIkuspegia.ErreserbakAldatuDira -= ErreserbakAldatuDira;
+        Konexioa.DatuakAldatuDira -= ErreserbakAldatuDira;
+    }
+
+    private void ErreserbakAldatuDira()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Kargatu();
+            Eguneratu();
+        });
     }
 
     private void BtnFreskatu_Click(object sender, RoutedEventArgs e)
@@ -34,7 +66,10 @@ public partial class MahaiMapaIkuspegia : UserControl
 
     private void Kargatu()
     {
-        var r = Konexioa.Bidali("MESAS_LISTA");
+        var r = Konexioa.Bidali("MESAS_LISTA", new
+        {
+            data = DtpDataIragazkia.SelectedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""
+        });
         if (!r.Arrakasta)
         {
             TxtMapaInfo.Text = r.Errorea;
@@ -52,7 +87,10 @@ public partial class MahaiMapaIkuspegia : UserControl
 
     private void Eguneratu()
     {
-        var iragazkia = new { data = TxtDataIragazkia.Text.Trim() };
+        var iragazkia = new
+        {
+            data = DtpDataIragazkia.SelectedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""
+        };
         var r = Konexioa.Bidali("RESERVA_LISTA", iragazkia);
         TxtErreserbaAbisua.Text = r.Arrakasta ? "" : r.Errorea;
         var erreserbak = r.Arrakasta
@@ -64,6 +102,15 @@ public partial class MahaiMapaIkuspegia : UserControl
 
     private void BtnEguneratu_Click(object sender, RoutedEventArgs e) => Eguneratu();
 
+    private void DtpDataIragazkia_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_kargatuta)
+        {
+            Kargatu();
+            Eguneratu();
+        }
+    }
+
     // Mahai-txartela sakatzean: formularioa ireki eta mahiaren zenbakia jarri
     private void MahaiKlik(object sender, MouseButtonEventArgs e)
     {
@@ -74,8 +121,10 @@ public partial class MahaiMapaIkuspegia : UserControl
         TxtMahia.Text = $"{mahia.MahaiZenbakia}. mahaia ({mahia.Edukiera} plaza)";
         CboTxanda.SelectedIndex = 0;
         TxtPertsonak.Text = Math.Min(2, mahia.Edukiera).ToString();
-        DtpData.SelectedDate = null;
-        TxtBezeroa.Text = "";
+        DtpData.SelectedDate = DtpDataIragazkia.SelectedDate ?? DateTime.Today;
+        TxtBezeroa.Text = string.IsNullOrWhiteSpace(Saioa.Izena)
+            ? Saioa.ErabiltzaileIzena
+            : Saioa.Izena;
         TxtOharrak.Text = "";
         TxtAbisua.Text = "";
 

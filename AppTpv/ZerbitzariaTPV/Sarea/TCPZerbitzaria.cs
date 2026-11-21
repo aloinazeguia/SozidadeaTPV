@@ -7,6 +7,8 @@
 // ============================================================
 using System.Net;
 using System.Net.Sockets;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace ZerbitzariaTPV.Sarea;
 
@@ -24,6 +26,20 @@ public class TCPZerbitzaria
     public static readonly TCPZerbitzaria ZerbitzariHaria = new();
     // Uneko konektatutako bezero kopurua. Harien arteko sarrerak babesteko int da.
     private int _bezeroak;
+    private readonly ConcurrentDictionary<BezeroKonexioa, byte> _konexioak = new();
+
+    internal void Erregistratu(BezeroKonexioa bezeroa) => _konexioak.TryAdd(bezeroa, 0);
+
+    internal void Kendu(BezeroKonexioa bezeroa) => _konexioak.TryRemove(bezeroa, out _);
+
+    internal void JakinaraziErreserbaAldaketa()
+    {
+        var mezua = Encoding.UTF8.GetBytes(
+            "{\"ekintza\":\"ERRESERBAK_ALDATU\",\"arrakasta\":true,\"datuak\":{}}\n");
+
+        foreach (var bezeroa in _konexioak.Keys)
+            bezeroa.JakinarazpenaBidali(mezua);
+    }
 
     public void Abiarazi()
     {

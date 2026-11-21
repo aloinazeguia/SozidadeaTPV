@@ -14,6 +14,8 @@ public class BezeroKonexioa
 {
     // TCP konexioa gordetzen du, bezeroaren socketa adierazten duena.
     private readonly TcpClient _bezeroa;
+    private StreamWriter? _idazlea;
+    private readonly object _idazketaBlokeoa = new();
 
     // Konexio honetan sortu diren saio-tokenak. Socket-a bat-batean ixten bada
     // (prozesua kraskatu, konexioa galdu...) tokenak zerbitzarian pilatu ez daitezen
@@ -35,6 +37,8 @@ public class BezeroKonexioa
         // Erantzunak idazteko StreamWriter erabiltzen da, eta AutoFlush true da mezua berehala bidaltzeko.
         using (var idazlea = new StreamWriter(fluxua, new System.Text.UTF8Encoding(false)) { AutoFlush = true })
         {
+            _idazlea = idazlea;
+            TCPZerbitzaria.ZerbitzariHaria.Erregistratu(this);
             // StreamWriter-ek linebreak-aren formatu zehatza ezartzen du.
             idazlea.NewLine = "\n";
             string? lerroa;
@@ -47,14 +51,14 @@ public class BezeroKonexioa
                 // Lerroa prozesatu eta erantzun JSON bat sortu.
                 var erantzuna = Prozesatu(lerroa);
                 // Erantzuna socketera idazten da.
-                idazlea.Write(erantzuna);
-                // Mezu bakoitza lerro berriarekin amaitzen da.
-                idazlea.Write("\n");
+                ErantzunaIdatzi(erantzuna);
             }
         }
         }
         finally
         {
+            TCPZerbitzaria.ZerbitzariHaria.Kendu(this);
+            _idazlea = null;
             // Socket-a ixten denean saioak garbitu, LOGOUT esplizitua ez badago ere.
             // Horrela erabiltzaile askok saioa ireki/itxi errepikatzean ez dira
             // token zaharrak zerbitzarian geratzen.
@@ -65,6 +69,33 @@ public class BezeroKonexioa
         }
     }
 
+    internal void JakinarazpenaBidali(byte[] mezua)
+    {
+        try
+        {
+            lock (_idazketaBlokeoa)
+            {
+                _idazlea?.BaseStream.Write(mezua, 0, mezua.Length);
+                _idazlea?.Flush();
+            }
+        }
+        catch (IOException)
+        {
+            TCPZerbitzaria.ZerbitzariHaria.Kendu(this);
+        }
+        catch (ObjectDisposedException)
+        {
+            TCPZerbitzaria.ZerbitzariHaria.Kendu(this);
+        }
+    }
+
+    private void ErantzunaIdatzi(string erantzuna)
+    {
+        lock (_idazketaBlokeoa)
+        {
+            _idazlea?.WriteLine(erantzuna);
+        }
+    }
     private string Prozesatu(string lerroa)
     {
         try
@@ -97,6 +128,14 @@ public class BezeroKonexioa
                 _saioTokenak.Add(token);
 
             var emaitza = EragiketaKudeatzailea.Exekutatu(saioa, ekintza, datuak);
+
+            if (emaitza.Arrakasta &&
+                (ekintza == "RESERVA_CREAR" ||
+                 ekintza == "RESERVA_MODIFICAR" ||
+                 ekintza == "RESERVA_BORRAR"))
+            {
+                TCPZerbitzaria.ZerbitzariHaria.JakinaraziErreserbaAldaketa();
+            }
 
             // LOGINek sortutako tokena ere gorde: bezeroa berehala itxiz gero
             // Artatu()-ren finally blokeak ezabatu dezan.

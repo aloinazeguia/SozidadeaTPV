@@ -13,6 +13,8 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
+using System.Threading;
 
 // Bezeroaren zerbitzu-klaseen izen-eremua zehazten da.
 namespace BezeroaWPF.Zerbitzuak;
@@ -31,6 +33,8 @@ public class Erantzuna
 // TCP konexioa eta eskaeren bidalketa kudeatzeko klase estatikoa definitzen da.
 public static class Konexioa
 {
+    public static event Action? DatuakAldatuDira;
+
     // Windows makina birtualean zerbitzariaren (Mac-aren) IP helbidea erabili behar da,
     // ez 127.0.0.1. Helbidea zerbitzari.txt fitxategian ezar daiteke,
     // exekutagarriaren karpetan, lehen lerroan: IP [:portua].
@@ -45,6 +49,8 @@ public static class Konexioa
     private static StreamReader? _irakurlea;
     // Zerbitzariari lerroak bidaltzeko stream-idazlea gordetzen da.
     private static StreamWriter? _idazlea;
+    private static BlockingCollection<string>? _erantzunak;
+    private static CancellationTokenSource? _irakurketaGelditu;
     // Aldibereko eskaerak sekuentziatzeko blokeo-objektua gordetzen da.
     private static readonly object _blokeoa = new();
 
@@ -105,10 +111,16 @@ public static class Konexioa
                 // Idazketa-bufferrean geratutako datuak berehala bidaltzen dira.
                 _idazlea.Flush();
 
-                // Zerbitzariaren erantzun-lerroa irakurtzen da.
-                var lerroa = _irakurlea!.ReadLine();
-                // Erantzun-lerroa null bada, zerbitzariak konexioa itxi duela adierazten da.
-                if (lerroa == null)
+                string lerroa;
+                try
+                {
+                    lerroa = _erantzunak!.Take(_irakurketaGelditu!.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return new Erantzuna { Arrakasta = false, Errorea = "Zerbitzariarekiko konexioa galdu da." };
+                }
+                if (lerroa == "")
                     return new Erantzuna { Arrakasta = false, Errorea = "Zerbitzariak konexioa itxi du." };
 
                 // Jasotako testua JSON dokumentu gisa aztertzen da.
@@ -130,6 +142,10 @@ public static class Konexioa
                 // Erantzun-objektua sortu eta deitzaileari itzultzen zaio.
                 return new Erantzuna { Arrakasta = arrakasta, Datuak = datuakR, Errorea = errorea };
             }
+        catch (OperationCanceledException)
+        {
+            return new Erantzuna { Arrakasta = false, Errorea = "Zerbitzariarekiko konexioa galdu da." };
+        }
             // TCP konexioa ezartzean edo erabiltzean socket-errorea gertatzen bada kudeatzen da.
             catch (SocketException)
             {
@@ -180,6 +196,45 @@ public static class Konexioa
         _idazlea = new StreamWriter(fluxua, new UTF8Encoding(false)) { AutoFlush = true };
         // UTF-8 kodetutako erantzunak irakurtzeko irakurlea sortzen da.
         _irakurlea = new StreamReader(fluxua, Encoding.UTF8);
+        _erantzunak = new BlockingCollection<string>();
+        _irakurketaGelditu = new CancellationTokenSource();
+        HasiIrakurketa(_irakurlea, _erantzunak, _irakurketaGelditu.Token);
+    }
+
+    private static void HasiIrakurketa(StreamReader irakurlea,
+                                       BlockingCollection<string> erantzunak,
+                                       CancellationToken token)
+    {
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                string? lerroa;
+                while (!token.IsCancellationRequested && (lerroa = irakurlea.ReadLine()) != null)
+                {
+                    if (lerroa.Trim() == "") continue;
+
+                    using var dokumentua = JsonDocument.Parse(lerroa);
+                    var erroa = dokumentua.RootElement;
+                    var ekintza = erroa.TryGetProperty("ekintza", out var e) &&
+                                  e.ValueKind == JsonValueKind.String ? e.GetString() : null;
+                    if (ekintza == "ERRESERBAK_ALDATU")
+                    {
+                        Task.Run(() => DatuakAldatuDira?.Invoke());
+                        continue;
+                    }
+
+                    erantzunak.Add(lerroa, token);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
+            {
+            }
+            finally
+            {
+                try { erantzunak.TryAdd("", 0); } catch { }
+            }
+        }, token);
     }
 
     // TCP konexioa eta haren irakurle/idazleak ixten ditu.
@@ -189,6 +244,10 @@ public static class Konexioa
         try { _bezeroa?.Close(); } catch { /* Konexioa itxita dago jada. */ }
         // TCP bezeroaren erreferentzia ezabatzen da.
         _bezeroa = null;
+        try { _irakurketaGelditu?.Cancel(); } catch { }
+        _irakurketaGelditu?.Dispose();
+        _irakurketaGelditu = null;
+        _erantzunak = null;
         // Stream-irakurlearen erreferentzia ezabatzen da.
         _irakurlea = null;
         // Stream-idazlearen erreferentzia ezabatzen da.

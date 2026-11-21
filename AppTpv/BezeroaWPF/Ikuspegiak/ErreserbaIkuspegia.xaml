@@ -1,12 +1,13 @@
 <!-- ============================================================
   AppTpv — Interfaz 3 de 5: RESERVAS (requisito 1.5)
-  Mesa + txanda bazkaria/afaria + pertsonak; la data es OPCIONAL
-  (vacia = reserva sin data) y duple mahia/data/txanda la filtra
+  Mesa + txanda bazkaria/afaria + pertsonak; data derrigorrezkoa da
+  eta duple mahia/data/txanda la filtra el servidor.
   el servidor.
 ============================================================ -->
 <UserControl x:Class="BezeroaWPF.Ikuspegiak.ErreserbaIkuspegia"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:sys="clr-namespace:System;assembly=System.Runtime">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
@@ -20,7 +21,8 @@
 
             <TextBlock Text="Mahaia:"/>
             <ComboBox x:Name="CboMahia" Margin="0,2,0,10"
-                      DisplayMemberPath="Deskribapena" SelectedValuePath="Id"/>
+                      DisplayMemberPath="Deskribapena" SelectedValuePath="Id"
+                      SelectionChanged="CboMahia_SelectionChanged"/>
 
             <TextBlock Text="Txanda:"/>
             <ComboBox x:Name="CboTxanda" Margin="0,2,0,10" SelectedIndex="0">
@@ -29,10 +31,11 @@
             </ComboBox>
 
             <TextBlock Text="Pertsona kopurua:"/>
-            <TextBox x:Name="TxtPertsonak" Text="2" Margin="0,2,0,10"/>
+            <ComboBox x:Name="CboPertsonaKopurua" Margin="0,2,0,10"/>
 
-            <TextBlock Text="Data (hutsik = datarik gabe; gaurtik aurrera):"/>
+            <TextBlock Text="Data (gaur edo geroago):"/>
             <DatePicker x:Name="DtpData" Margin="0,2,0,10"
+                        SelectedDate="{x:Static sys:DateTime.Today}"
                         SelectedDateChanged="DtpData_SelectedDateChanged"/>
 
             <TextBlock Text="Bezeroaren izena:"/>

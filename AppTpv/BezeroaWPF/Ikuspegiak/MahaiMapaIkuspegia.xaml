@@ -15,13 +15,24 @@
         </Grid.RowDefinitions>
 
         <!-- Goiburua -->
-        <DockPanel Grid.Row="0" Background="#2E3440">
-            <Button DockPanel.Dock="Right" x:Name="BtnFreskatu" Content="Freskatu"
+        <DockPanel Grid.Row="0" Background="Beige">
+            <!--<Button DockPanel.Dock="Right" x:Name="BtnFreskatu" Content="Freskatu"
                     Width="96" Height="34" Margin="0,0,20,0" FontSize="13"
                     Background="#6FC16E" Foreground="#2E3440" FontWeight="Bold"
                     BorderThickness="0" Cursor="Hand" Click="BtnFreskatu_Click"/>
             <TextBlock Text="MAHAIEN MAPA" Foreground="White" FontSize="22"
-                       FontWeight="Bold" Margin="24,14"/>
+                       FontWeight="Bold" Margin="24,14"/>-->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,2,0">
+                <TextBlock Text="Erreserba aktiboak" FontSize="15" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="  Data-iragazkia: " VerticalAlignment="Center"/>
+                <DatePicker x:Name="DtpDataIragazkia" Width="130"
+                            SelectedDateChanged="DtpDataIragazkia_SelectedDateChanged"/>
+                <Button x:Name="BtnEguneratu" Content="Eguneratu" Width="90" Margin="8,0,0,0"
+                        Click="BtnEguneratu_Click"/>
+                <TextBlock x:Name="TxtErreserbaAbisua" Foreground="#B03A2E"
+                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
         </DockPanel>
 
         <!-- Mahai-txartelak -->
@@ -37,13 +48,14 @@
                     <DataTemplate>
                         <Border Width="210" Height="158" CornerRadius="12" Margin="10"
                                 Padding="16" BorderBrush="#C9D3DF" BorderThickness="1"
-                                Background="#DFF0E3" Cursor="Hand"
+                                Cursor="Hand"
                                 MouseLeftButtonUp="MahaiKlik">
                             <Border.Style>
                                 <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#DFF0E3"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Egoera}" Value="erreserbatuta">
-                                            <Setter Property="Background" Value="#FFF3D6"/>
+                                            <Setter Property="Background" Value="#B03A2E"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Egoera}" Value="okupatuta">
                                             <Setter Property="Background" Value="#FADBD8"/>
@@ -114,16 +126,7 @@
         </Border>
 
         <DockPanel Grid.Row="2">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                <TextBlock Text="Erreserba aktiboak" FontSize="15" FontWeight="Bold"
-                           VerticalAlignment="Center"/>
-                <TextBlock Text="  data-iragazkia (hutsik = guztiak): " VerticalAlignment="Center"/>
-                <TextBox x:Name="TxtDataIragazkia" Width="100"/>
-                <Button x:Name="BtnEguneratu" Content="Eguneratu" Width="90" Margin="8,0,0,0"
-                        Click="BtnEguneratu_Click"/>
-                <TextBlock x:Name="TxtErreserbaAbisua" Foreground="#B03A2E"
-                           VerticalAlignment="Center" Margin="8,0,0,0"/>
-            </StackPanel>
+
             <DataGrid x:Name="GridErreserbak" AutoGenerateColumns="False" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding ErreserbaId}" Width="40"/>
@@ -139,8 +142,8 @@
         <!-- Oinarria: egoeren legeenda -->
         <DockPanel Grid.Row="3" Background="#EEEEEE" LastChildFill="False">
             <TextBlock Text="Librea" Foreground="#1E7A52" FontWeight="Bold" Margin="24,8,0,8"/>
-            <TextBlock Text="Erreserbatuta" Foreground="#B7791F" FontWeight="Bold" Margin="24,8,0,8"/>
-            <TextBlock Text="Okupatuta" Foreground="#B03A2E" FontWeight="Bold" Margin="24,8,0,8"/>
+            <TextBlock Text="Erreserbatuta" Foreground="#B03A2E" FontWeight="Bold" Margin="24,8,0,8"/>
+            <!--<TextBlock Text="Okupatuta" Foreground="#B03A2E" FontWeight="Bold" Margin="24,8,0,8"/>-->
             <TextBlock x:Name="TxtMapaInfo" Foreground="#55606D" FontSize="11"
                        DockPanel.Dock="Right" Margin="0,8,24,8" TextWrapping="Wrap"/>
         </DockPanel>
