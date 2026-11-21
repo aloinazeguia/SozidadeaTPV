@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj": {}
+    "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj": {}
   },
   "projects": {
-    "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj": {
+    "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
+        "projectUniqueName": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
         "projectName": "ZerbitzariaTPV",
-        "projectPath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
+        "projectPath": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
         "packagesPath": "/Users/Anetxu/.nuget/packages/",
-        "outputPath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/obj/",
+        "outputPath": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/Anetxu/.nuget/NuGet/NuGet.Config"

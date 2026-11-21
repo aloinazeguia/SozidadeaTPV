@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/BezeroaWPF.csproj",
+      "projectUniqueName": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/BezeroaWPF/BezeroaWPF.csproj",
       "projectName": "AppTpv",
-      "projectPath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/BezeroaWPF.csproj",
+      "projectPath": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/BezeroaWPF/BezeroaWPF.csproj",
       "packagesPath": "/Users/Anetxu/.nuget/packages/",
-      "outputPath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/obj/",
+      "outputPath": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/BezeroaWPF/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/Anetxu/.nuget/NuGet/NuGet.Config"

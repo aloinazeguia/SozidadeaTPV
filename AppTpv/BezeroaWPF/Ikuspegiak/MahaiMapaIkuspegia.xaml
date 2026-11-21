@@ -65,6 +65,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
         <!-- Oinarria: egoeren legeenda -->
         <DockPanel Grid.Row="2" Background="#EEEEEE" LastChildFill="False">
             <TextBlock Text="Librea" Foreground="#1E7A52" FontWeight="Bold" Margin="24,8,0,8"/>

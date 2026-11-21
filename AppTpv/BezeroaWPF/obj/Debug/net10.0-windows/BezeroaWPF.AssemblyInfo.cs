@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AppTpv")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82f2b73c600a50c505d2fd8d8a2400885535d120")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4dc4c0bb745c3673e03eebd8831ac52893e95c58")]
 [assembly: System.Reflection.AssemblyProductAttribute("AppTpv")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AppTpv")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

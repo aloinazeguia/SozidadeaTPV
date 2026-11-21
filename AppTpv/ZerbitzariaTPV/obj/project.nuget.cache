@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "5f0xkNI3YSg=",
+  "dgSpecHash": "28xr9oAsc8E=",
   "success": true,
-  "projectFilePath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
+  "projectFilePath": "/Users/Anetxu/aazubiri/Soziedadea/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
   "expectedPackageFiles": [
     "/Users/Anetxu/.nuget/packages/microsoft.data.sqlite/10.0.14/microsoft.data.sqlite.10.0.14.nupkg.sha512",
     "/Users/Anetxu/.nuget/packages/microsoft.data.sqlite.core/10.0.14/microsoft.data.sqlite.core.10.0.14.nupkg.sha512",
