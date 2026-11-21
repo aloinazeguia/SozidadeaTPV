@@ -11,6 +11,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Goiburua -->
@@ -24,7 +25,7 @@
         </DockPanel>
 
         <!-- Mahai-txartelak -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="MapaPanel" Grid.Row="1" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="ListaMahaiak" Margin="24">
                 <ItemsControl.ItemsPanel>
@@ -36,7 +37,8 @@
                     <DataTemplate>
                         <Border Width="210" Height="158" CornerRadius="12" Margin="10"
                                 Padding="16" BorderBrush="#C9D3DF" BorderThickness="1"
-                                Background="#DFF0E3">
+                                Background="#DFF0E3" Cursor="Hand"
+                                MouseLeftButtonUp="MahaiKlik">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Style.Triggers>
@@ -66,8 +68,76 @@
             </ItemsControl>
         </ScrollViewer>
 
+        <!-- Erreserba-formularioa: mahi batean klik egitean bistaratzen da -->
+        <Border x:Name="FormaPanel" Grid.Row="1" Background="#F4F6F8"
+                Visibility="Collapsed">
+            <Border Width="380" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Background="White" CornerRadius="10" Padding="24"
+                    BorderBrush="#C9D3DF" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock x:Name="TxtFormaIzenburua" Text="Erreserba berria"
+                               FontSize="18" FontWeight="Bold" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="Mahaia:"/>
+                    <TextBlock x:Name="TxtMahia" FontWeight="Bold" Margin="0,2,0,10"/>
+
+                    <TextBlock Text="Txanda:"/>
+                    <ComboBox x:Name="CboTxanda" Margin="0,2,0,10" SelectedIndex="0">
+                        <ComboBoxItem Content="bazkaria"/>
+                        <ComboBoxItem Content="afaria"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Pertsona kopurua:"/>
+                    <TextBox x:Name="TxtPertsonak" Text="2" Margin="0,2,0,10"
+                             TextChanged="TxtPertsonak_TextChanged"/>
+
+                    <TextBlock Text="Data (hutsik = datarik gabe; gaurtik aurrera):"/>
+                    <DatePicker x:Name="DtpData" Margin="0,2,0,10"
+                                SelectedDateChanged="DtpData_SelectedDateChanged"/>
+
+                    <TextBlock Text="Bezeroaren izena:"/>
+                    <TextBox x:Name="TxtBezeroa" Margin="0,2,0,10"/>
+
+                    <TextBlock Text="Oharrak (aukerakoa):"/>
+                    <TextBox x:Name="TxtOharrak" Margin="0,2,0,10"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnSortu" Content="Sortu" Width="90"
+                                Background="#2E7D32" Foreground="White" Click="BtnSortu_Click"/>
+                        <Button x:Name="BtnUtzi" Content="Utzi" Width="80" Margin="6,0,0,0"
+                                Click="BtnUtzi_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtAbisua" Foreground="Red" TextWrapping="Wrap"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <DockPanel Grid.Row="2">
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="Erreserba aktiboak" FontSize="15" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="  data-iragazkia (hutsik = guztiak): " VerticalAlignment="Center"/>
+                <TextBox x:Name="TxtDataIragazkia" Width="100"/>
+                <Button x:Name="BtnEguneratu" Content="Eguneratu" Width="90" Margin="8,0,0,0"
+                        Click="BtnEguneratu_Click"/>
+                <TextBlock x:Name="TxtErreserbaAbisua" Foreground="#B03A2E"
+                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <DataGrid x:Name="GridErreserbak" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding ErreserbaId}" Width="40"/>
+                    <DataGridTextColumn Header="Mahaia" Binding="{Binding MahaiZenbakia}" Width="60"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding DataErakutsi}" Width="110"/>
+                    <DataGridTextColumn Header="Txanda" Binding="{Binding Txanda}" Width="80"/>
+                    <DataGridTextColumn Header="Pertsonak" Binding="{Binding PertsonaKopurua}" Width="80"/>
+                    <DataGridTextColumn Header="Bezeroa" Binding="{Binding BezeroIzena}" Width="*"/>
+                    <DataGridTextColumn Header="Oharrak" Binding="{Binding Oharrak}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
         <!-- Oinarria: egoeren legeenda -->
-        <DockPanel Grid.Row="2" Background="#EEEEEE" LastChildFill="False">
+        <DockPanel Grid.Row="3" Background="#EEEEEE" LastChildFill="False">
             <TextBlock Text="Librea" Foreground="#1E7A52" FontWeight="Bold" Margin="24,8,0,8"/>
             <TextBlock Text="Erreserbatuta" Foreground="#B7791F" FontWeight="Bold" Margin="24,8,0,8"/>
             <TextBlock Text="Okupatuta" Foreground="#B03A2E" FontWeight="Bold" Margin="24,8,0,8"/>

@@ -1,6 +1,7 @@
 // ============================================================
 //  AppTpv — Interfaz 3 de 5: RESERVAS (logica)
 // ============================================================
+using System.Globalization;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,9 @@ public partial class ErreserbaIkuspegia : UserControl
     public ErreserbaIkuspegia()
     {
         InitializeComponent();
+        // Egutegian gaurtik aurrerako egunak bakarrik hauta daitezke
+        DtpData.DisplayDateStart = DateTime.Today;
+        DtpData.DisplayDate = DateTime.Today;
         Loaded += (_, _) => { MahaiakKargatu(); Eguneratu(); };
     }
 
@@ -38,13 +42,26 @@ public partial class ErreserbaIkuspegia : UserControl
 
     private void BtnEguneratu_Click(object sender, RoutedEventArgs e) => Eguneratu();
 
+    // Data hutsik egon daiteke (datarik gabe); hautatuta badago, gaurtik aurrera izan behar da
+    private bool DataBaliozkoa() =>
+        DtpData.SelectedDate is not { } hautatuta || hautatuta.Date >= DateTime.Today;
+
+    private void DtpData_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DtpData == null || TxtAbisua == null) return;
+        if (!DataBaliozkoa())
+            TxtAbisua.Text = "Erreserbak gaurtik aurrera soilik egin daitezke.";
+        else if (TxtAbisua.Text.StartsWith("Erreserbak gaurtik"))
+            TxtAbisua.Text = "";
+    }
+
     private (MahaiDatuak mahia, string txanda, int pertsonak, string data,
              string bezeroa, string oharrak, bool errorea) FormularioaIrakurri()
     {
         var mahia = CboMahia.SelectedItem as MahaiDatuak;
         var txanda = (CboTxanda.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
         int.TryParse(TxtPertsonak.Text, out var pertsonak);
-        var data = TxtData.Text.Trim();
+        var data = DtpData.SelectedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
         var bezeroa = TxtBezeroa.Text.Trim();
         var oharrak = TxtOharrak.Text.Trim();
         bool errorea = mahia == null || txanda == "" || pertsonak <= 0 || bezeroa == "";
@@ -53,6 +70,11 @@ public partial class ErreserbaIkuspegia : UserControl
 
     private void BtnSortu_Click(object sender, RoutedEventArgs e)
     {
+        if (!DataBaliozkoa())
+        {
+            TxtAbisua.Text = "Erreserbak gaurtik aurrera soilik egin daitezke.";
+            return;
+        }
         var f = FormularioaIrakurri();
         if (f.errorea)
         {
@@ -80,6 +102,11 @@ public partial class ErreserbaIkuspegia : UserControl
         if (AukeratutakoErreserba is not { } aukeratutakoa)
         {
             TxtAbisua.Text = "Aukeratu zerrendako erreserba bat aldatzeko.";
+            return;
+        }
+        if (!DataBaliozkoa())
+        {
+            TxtAbisua.Text = "Erreserbak gaurtik aurrera soilik egin daitezke.";
             return;
         }
         var f = FormularioaIrakurri();
@@ -126,7 +153,9 @@ public partial class ErreserbaIkuspegia : UserControl
         if (mahia != null) CboMahia.SelectedItem = mahia;
         CboTxanda.SelectedIndex = aukeratutakoa.Txanda == "afaria" ? 1 : 0;
         TxtPertsonak.Text = aukeratutakoa.PertsonaKopurua.ToString();
-        TxtData.Text = aukeratutakoa.Data == "datarik gabe" ? "" : aukeratutakoa.Data;
+        DtpData.SelectedDate = DateTime.TryParseExact(aukeratutakoa.Data, "yyyy-MM-dd",
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out var data) ? data : null;
+        TxtAbisua.Text = "";
         TxtBezeroa.Text = aukeratutakoa.BezeroIzena;
         TxtOharrak.Text = aukeratutakoa.Oharrak;
     }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ZerbitzariaTPV")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4dc4c0bb745c3673e03eebd8831ac52893e95c58")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+32459f0a44fa226d4b470d7bd1a14abb140d7b25")]
 [assembly: System.Reflection.AssemblyProductAttribute("ZerbitzariaTPV")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZerbitzariaTPV")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

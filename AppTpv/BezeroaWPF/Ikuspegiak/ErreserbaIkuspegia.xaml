@@ -31,8 +31,9 @@
             <TextBlock Text="Pertsona kopurua:"/>
             <TextBox x:Name="TxtPertsonak" Text="2" Margin="0,2,0,10"/>
 
-            <TextBlock Text="Data (YYYY-MM-DD; hutsik = datarik gabe):"/>
-            <TextBox x:Name="TxtData" Margin="0,2,0,10"/>
+            <TextBlock Text="Data (hutsik = datarik gabe; gaurtik aurrera):"/>
+            <DatePicker x:Name="DtpData" Margin="0,2,0,10"
+                        SelectedDateChanged="DtpData_SelectedDateChanged"/>
 
             <TextBlock Text="Bezeroaren izena:"/>
             <TextBox x:Name="TxtBezeroa" Margin="0,2,0,10"/>
