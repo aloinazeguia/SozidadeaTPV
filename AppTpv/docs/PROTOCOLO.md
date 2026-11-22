@@ -10,6 +10,13 @@
 - Socket-a ixten denean (LOGOUT esplizitua ez badago ere), zerbitzariak konexio
   horretan sortutako tokenak automatikoki ezabatzen ditu `try/finally` bidez;
   horrela saioa ireki/itxi errepikatzean ez dira token zaharrak pilatzen.
+- Zerbitzariak **jakinarazpenak** ere bidaltzen ditu, bezeroak eskatu gabe:
+  erreserba bat sortu/aldatu/bertan behera utzi ondoren,
+  `{"ekintza":"ERRESERBAK_ALDATU","arrakasta":true,"datuak":{}}\n` lerroa
+  konektatutako bezero guztiengana iristen da. Bezeroak ez du erantzun gisa
+  kontsumitzen: bere irakurketa-harian bereizi eta `DatuakAldatuDira` gertaera
+  altxatzen du, UI-a freskatzeko. Erantzunak eta jakinarazpenak konexio bereko
+  `_idazketaBlokeoa`-rekin idazten dira socket-ean nahas ez daitezen.
 
 ## Mezuaren formatua
 
@@ -53,8 +60,9 @@ Gakoen mapa (protokoloa euskaratu da):
 | `productos` / `usuarios` / `mesas` / `reservas` | `produktuak` / `erabiltzaileak` / `mahaiak` / `erreserbak` |
 | `total` / `ticket` / `lineas` / `iva` | `guztira` / `txartela` / `lerroak` / `beza` |
 
-`token` eta ekintza-kodeak (`LOGIN`, `PRODUCTOS_LISTA`, ...) identifikatzaile
-egonkorrak dira eta ez dira aldatu. DBko rol-balioak ere (`admin`, `usuario`)
+`token`, ekintza-kodeak (`LOGIN`, `PRODUCTOS_LISTA`, ...) eta
+`ERRESERBAK_ALDATU` jakinarazpen-kodea identifikatzaile egonkorrak dira eta ez
+dira aldatu. DBko rol-balioak ere (`admin`, `usuario`)
 berdin mantentzen dira, erabiltzaile-interfazeak "Administratzailea" /
 "Erabiltzailea" erakusten dituen arren.
 
@@ -75,7 +83,7 @@ berdin mantentzen dira, erabiltzaile-interfazeak "Administratzailea" /
 | `STOCK_MODIFICAR` | admin | id, izakinak | arrakasta |
 | `USUARIOS_LISTA` | admin | – | erabiltzaileak |
 | `USUARIO_CREAR / _MODIFICAR / _BORRAR` | admin | erabiltzailea, pasahitza, izena, rola... | arrakasta |
-| `MESAS_LISTA` | saioa | – | mahaiak (id, mahaiZenbakia, edukiera, erreserbak, eskaeraId, egoera) |
+| `MESAS_LISTA` | saioa | `data` (aukerakoa, `YYYY-MM-DD`; lehenespenez gaurkoa) | mahaiak (id, mahaiZenbakia, edukiera, erreserbak, eskaeraId, egoera) |
 | `RESERVA_CREAR` | saioa | mahaiId, data (aukerakoa), txanda, pertsonaKopurua | erreserbaId |
 | `RESERVA_MODIFICAR / _BORRAR` | saioa | erreserbaId + aldaketak | arrakasta |
 | `RESERVA_LISTA` | saioa | data, txanda (aukerakoak) | erreserbak |
@@ -87,6 +95,14 @@ berdin mantentzen dira, erabiltzaile-interfazeak "Administratzailea" /
 | `PEDIDO_MAHAIA_ESLEITU` | saioa | eskaeraId, mahaiId | arrakasta; mapak mahia okupatuta erakusten du |
 | `TICKET_OBTENER` | saioa | eskaeraId | txartela (lerroak + guztira); jabeak/admin-ek soilik |
 | `LOGOUT` | saioa | – | saioa itxi (bereziki kudeatzen da) |
+| `ERRESERBAK_ALDATU` | jakinarazpena | – | zerbitzariak bidalitako lerroa; bezeroak UI-a freskatzen du |
+
+`RESERVA_CREAR`-en `data` hutsik etor daiteke (data gabeko erreserba); zerbitzariak
+`YYYY-MM-DD` formatua soilik onartzen du datarik badago. Erreserbak egiteko
+**Erreserbak** pestañak data derrigorrezkoa eta gaurtik aurrerakoa eskatzen du;
+mahaien mapako formularioak, aldiz, data hutsik uztea ahalbidetzen du.
+`MESAS_LISTA`-k datarik gabeko erreserbak beti zenbatzen ditu, eta data dutenak
+eskatutako `data` horretan soilik.
 
 ### Eskaera irekiaren berreskuratzea
 
@@ -103,8 +119,18 @@ ditzake: `PEDIDO_REKUPERATU`, `PEDIDO_AGREGAR_LINEA`, `PEDIDO_CONFIRMAR`,
 jabetza egiaztatzen da. Bestela: `{ "arrakasta": false, "errorea": "Eskaera hori ez da zurea" }`.
 
 ## Aldiberekotasuna
-- **Lock global bakarra** zerbitzarian DB idazketa-sekuentzia guztien inguruan
-  (eskaera sortu, lerroak, izakin-murrizketa, kontagailuak).
+- **Lock global bakarra** (`DatuBasea.IdazketaBlokeoa`) zerbitzarian DB
+  idazketa-sekuentzia guztien inguruan (eskaera sortu, lerroak,
+  izakin-murrizketa, erreserbak).
+- **Konexio bakoitzeko idazketa-locka** (`BezeroKonexioa._idazketaBlokeoa`):
+  erantzunak eta `ERRESERBAK_ALDATU` jakinarazpenak socket berean serializatzen
+  ditu. Bezeroan, `Konexioa._blokeoa`-k bidalketak serializatzen ditu eta
+  irakurketa-hariak `BlockingCollection<string>` batean jasotzen ditu erantzunak.
+- Konektatutako bezeroen kontagailua `Interlocked`-ekin eguneratzen da; tokenak
+  eta jakinarazpenetarako konexioak `ConcurrentDictionary`-etan daude.
 - SQLite WAL moduan, IRURKETAK lock gabe paraleloan egin daitezke.
 - ≤10 bezero eta idazketa laburrekin ez da taula bakoitzeko lock-ik behar
   (enuntziatuak berak baimentzen du), eta horrela deadlock-ik ez da sortzen.
+- Nabardura: `Pedido` bakarra irekitzeko aurre-egiaztapena
+  (`Eska_Irekia`) lock-a hartu aurretik egiten da; aldi bereko bi
+  `PEDIDO_ABRIR`-ek bi eskaera ireki sor ditzakete.

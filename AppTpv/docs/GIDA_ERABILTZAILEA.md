@@ -23,8 +23,11 @@ Interfazeak: `BezeroaWPF/Leihoak/SaioHasieraLeihoa.xaml`,
 ## 1. Mahai-erreserbak (**Erreserbak** pestaña)
 
 Erreserbetarako **Ikus Osagaiak** (WPF kontrolak) erabiltzen dira:
-`ComboBox` (mahaiak eta txanda), `TextBox` (data, komensalak, izena, oharrak)
-eta `DataGrid` (erreserben zerrenda). Ez dago komando-testurik idatzi beharrik.
+`ComboBox` (mahaiak, txanda eta pertsona-kopurua), `DatePicker` (data),
+`TextBox` (izena, oharrak) eta `DataGrid` (erreserben zerrenda).
+Ez dago komando-testurik idatzi beharrik. Data **derrigorrezkoa** da eta
+gaurtik aurrerakoa izan behar da (`DtpData` egutegian ezin dira data zaharrak
+hautatu).
 
 ### Erreserba berria sortu
 
@@ -34,18 +37,18 @@ Formularioa ezkerrean dago (`ErreserbaIkuspegia.xaml`):
 |---|---|
 | `CboMahia` | Mahai zerrenda: `Mahai 1 (edukiera 4)` moduko testua erakusten du |
 | `CboTxanda` | **bazkaria** edo **afaria** aukeratu |
-| `TxtPertsonak` | Pertsona kopurua (lehenespenez `2`) |
-| `TxtData` | `YYYY-MM-DD` formatuan; **hutsik uzten bada, data gabeko erreserba** da |
-| `TxtBezeroa` | Erreserba egiten duen bezeroaren izena |
+| `CboPertsonaKopurua` | Pertsona kopurua; mahia aldatzean `1`–`edukiera` bitarteko zerrenda sortzen da, `2` lehenetsita |
+| `DtpData` | Egutegia: **gaur edo geroago**, lehenespenez gaurkoa. Ezin da hutsik utzi pestaña honetan |
+| `TxtBezeroa` | Erreserba egiten duen bezeroaren izena; saioan izena badago, automatikoki betetzen da |
 | `TxtOharrak` | Oharrak (aukerakoa) |
 
 Urratsak:
 
-1. Aukeratu mahia eta txanda.
-2. Idatzi komensal-kopurua, bezeroaren izena eta (aukerakoa) data.
+1. Aukeratu mahia eta txanda; pertsona-kopurua mahiaren edukierara egokitzen da.
+2. Hautatu data egutegian (gaur edo geroago) eta idatzi bezeroaren izena.
 3. Sakatu **Sortu**.
-4. `TxtAbisua`-n `Reserva creada.` agertzen da; eskuineko `GridErreserbak`
-   taula eguneratzen da.
+4. `TxtAbisua`-n `Erreserba sortu da.` agertzen da; eskuineko `GridErreserbak`
+   taula eta **Mahaiak** pestañako mapa automatikoki eguneratzen dira.
 
 Zerbitzariak automatikoki egiaztatzen ditu:
 
@@ -53,19 +56,26 @@ Zerbitzariak automatikoki egiaztatzen ditu:
   (`Mahaiak gehienez 4 lagun onartzen ditu`);
 - mahia ez dagoela jada erreserbatuta **data + txanda** berean;
 - data behar bezala idatzita dagoela (`YYYY-MM-DD`).
+  UI-ak, gainera, data zaharrak hautatzea eragozten du.
+
+Erreserba sortu/aldatu/bertan behera utzi ondoren, zerbitzariak
+`ERRESERBAK_ALDATU` jakinarazpena bidaltzen die gainerako bezeroei: beste
+pestaña batean ere mapa berehala freskatzen da, eskuz **Eguneratu** sakatu gabe.
 
 ### Erreserba aldatu
 
-1. Hautatu fila `GridErreserbak`-en — formularioa automatikoki betetzen da.
-2. Aldatu nahi dituzun eremuak.
-3. Sakatu **Aldatu**.
+1. Hautatu fila `GridErreserbak`-en — formularioa automatikoki betetzen da
+   (pertsona-kopurua, data, txanda, izena eta oharrak barne).
+2. Aldatu nahi dituzun eremuak; data gaurtik aurrerakoa izan behar da.
+3. Sakatu **Aldatu**. Berrespena: `N erreserba aldatu da.`
 
 ### Erreserba bertan behera utzi
 
 1. Hautatu fila.
 2. Sakatu **Utzi erreserba** eta berretsi.
 
-Erreserba ez da fisikoki ezabatzen: `estado = 'cancelada'` bihurtzen da.
+Berrespena: `Erreserba bertan behera utzi da.` Erreserba ez da fisikoki
+ezabatzen: `estado = 'cancelada'` bihurtzen da.
 
 ### Zerrenda iragazi
 
@@ -179,11 +189,25 @@ freskatzen da.
 `MahaiMapaIkuspegia.xaml`-ek 7 mahaien egoera erakusten du txartel bakoitzeko:
 
 - **Librea** (berdea): eskaera irekirik eta erreserba aktiborik gabe.
-- **Erreserbatuta** (horia): unean erreserba aktiboa duena.
-- **Okupatuta** (gorria): eskaera irekia duena; `Eskaera zk. N` erakusten du.
+- **Erreserbatuta** (gorria): unean erreserba aktiboa duena, hautatutako
+  dataren arabera.
+- **Okupatuta** (gorri argia): eskaera irekia duena; `Eskaera zk. N` erakusten
+  du. Egoeren legeendan "Okupatuta" sarrera komentatuta dago, baina
+  txartelaren egoera kalkulatzen eta erakusten jarraitzen du.
 
-**Freskatu** botoiak zerbitzaritik egoera berriro ekartzen du
-(`MESAS_LISTA`). Mapa erabiltzaile guztientzat ikusgai dago.
+Mapak goialdean **Data-iragazkia** (`DtpDataIragazkia`) eta **Eguneratu**
+botoia ditu: data aldatzean `MESAS_LISTA` eta `RESERVA_LISTA` berriro deitzen
+dira. Erreserba aktiboen zerrenda `GridErreserbak`-en ikusten da. Erreserba
+batek beste bezero batek aldatzen duenean, `ERRESERBAK_ALDATU` jakinarazpenak
+mapa eta zerrenda automatikoki freskatzen ditu.
+
+Mahai-txartel batean klik eginez gero, erreserba-formularioa irekitzen da
+(`FormaPanel`): txanda, pertsonak, data, bezeroaren izena eta oharrak bete eta
+**Sortu** sakatu daitezke, **Erreserbak** pestañara joan gabe. Data hutsik uztea
+onartzen da formulario honetan (**data gabeko erreserba**), baina hautatuz gero
+gaurtik aurrerakoa izan behar da. **Utzi** botoiak mapara itzultzen du.
+
+Mapa erabiltzaile guztientzat ikusgai dago.
 
 ---
 
@@ -191,7 +215,7 @@ freskatzen da.
 
 | Eskakizuna | Non ikusten den |
 |---|---|
-| Ikus Osagaiak erreserbak egitean | `CboMahia`, `CboTxanda`, `TxtData`, `GridErreserbak` |
+| Ikus Osagaiak erreserbak egitean | `CboMahia`, `CboTxanda`, `CboPertsonaKopurua`, `DtpData`, `GridErreserbak`; mapan `FormaPanel` |
 | Ikus Osagaiak produktuak aukeratzean | `ListaKategoriak`, txartel-botoiak, `EditorePanela` |
 | Ticketa produktu/kantitate/guztizkoarekin | **IKUSI TIKETA** (`BtnTicket_Click`) |
 | Erosketa baieztatzean stocka automatikoki eguneratu | **KOBRATU** → `PEDIDO_CONFIRMAR` → `Eska_Baieztatu` |
@@ -199,4 +223,4 @@ freskatzen da.
 | Eskaera mahaiari lotu | `CboMahaiak` + **Esleitu** (`PEDIDO_MAHAIA_ESLEITU`) |
 | 7 mahaien egoera bisualak | **Mahaiak** pestaña (`MahaiMapaIkuspegia`) |
 | Bazkaria/afaria bereizita | `CboTxanda` |
-| Data zehaztu gabea onartuta | `TxtData` hutsik |
+| Data zehaztu gabea onartuta | Mahaien mapako formularioan `DtpData` hutsik; **Erreserbak** pestañan data derrigorrezkoa da |

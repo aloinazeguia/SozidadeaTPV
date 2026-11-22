@@ -1,3 +1,7 @@
-AppTpv/bin/
-AppTpv/obj/
-AppTpv/.vs/
+++/bin/
+++/obj/
+++/.vs/
+/build-check/
+/build-check-client/
+/build-check-server/
+/Dokumentuak

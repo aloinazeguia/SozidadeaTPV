@@ -3,6 +3,9 @@
 WID + ZPP **1. Ebaluaketako Erronka**rako garatutako salmenta-puntu (TPV) sistema.
 Bezero-zerbitzari arkitektura, TCP konexioa eta SQLite datu-basea erabiltzen ditu.
 Bezeroaren interfazeak WPF/XAML-ekin daude eginda (`BezeroaWPF` proiektua).
+Erreserba bat sortu/aldatu/bertan behera utzi ondoren, zerbitzariak
+`ERRESERBAK_ALDATU` jakinarazpena bidaltzen die konektatutako bezero guztiei,
+mahaien mapa eta erreserben zerrenda automatikoki freskatzeko.
 
 ## Egitura
 
@@ -38,10 +41,12 @@ Kontsolan honelako mezuak ikusi behar dira:
 ```
 BD OK -> erabiltzaileak=17 mahaiak=7 produktuak=21
 [TCP] 5001 atakan entzuten (gehienez 10 bezero)
-Zerbitzaria martxan. Idatzi 'parar' ixteko.
+Zerbitzaria martxan. Idatzi 'ITZALI' ixteko.
 ```
 
-Gelditzeko: idatzi `parar` + Enter, edo `Ctrl+C`.
+Gelditzeko: `Ctrl+C` da bide fidagarria. Kontsolak `ITZALI` eskatzen duen
+arren, egungo kodeak `ToLower() == "ITZALI"` konparatzen du (beti faltsua),
+beraz komandoa idatziz gero ez da zerbitzaria itxiko.
 
 ### 2. Bezeroa konpilatu / argitaratu
 
@@ -88,7 +93,7 @@ pestaña batzuk ikusgai egongo dira.
   - Release: `ZerbitzariaTPV/bin/Release/net10.0/data/tpv.db`
 - Lehen abiaraztean `ZerbitzariaTPV/Datuak/Eskema.sql`-etik sortzen da automatikoki.
 - Lehendik dauden DBetan `Pedido.idMesa` zutabea migrazio idempotente bidez gehitzen
-  da (`DatuBasea.Hasieratu()`), datuak galdu gabe. Zutabe horri esker eskaera irekia
+  da (`DatuBasea.Hasi()`), datuak galdu gabe. Zutabe horri esker eskaera irekia
   mahai bati lotzen zaio eta mapak egoera erakusten du.
 - Hasierako datuak: 17 erabiltzaile (`admin` + 15 erabiltzaile berri, pasahitza
   `1234`), 7 mahai (4 laguneko 2, 6 laguneko 2, 10 laguneko 3) eta 21 produktu (kafeak, freskagarriak,
@@ -124,3 +129,4 @@ martxan badago, erabili SQLite-ren backup mekanismoa (WAL modua dago aktibatuta)
 - [Erabiltzailearen gida](docs/GIDA_ERABILTZAILEA.md)
 - [Aurkezpena: zerbitzuak, prozesuak, hariak eta socketak](docs/AURKEZPENA_ZERBITZUAK_PROZESUAK_HARIAK_SOCKETAK.md)
 - [Hizkuntza-planaren aurkezpena](docs/hizkuntzak.md)
+- [Analisi teknikoa (PDF)](../Dokumentuak/Analisi_Teknikoa.pdf) — fluxuak eta blokeo-ñabardurak barne.

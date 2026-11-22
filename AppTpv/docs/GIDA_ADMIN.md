@@ -145,5 +145,10 @@ erregistroa mantentzen da. Ezin duzu zeure burua desgaitu
 - Saioa itxi gabe socket-a galtzen bada ere, zerbitzariak tokena garbitzen du
   konexioa ixten denean; ez dira saio zaharrak pilatzen.
 - Taularen goiko **Eguneratu** botoiak datuak birkargatzen ditu (bestelako
-  bezero batek aldaketak egin baditu ikusteko).
+  bezero batek aldaketak egin baditu ikusteko). Erreserben kasuan, gainera,
+  zerbitzariak `ERRESERBAK_ALDATU` jakinarazpena bidaltzen du edozein bezero
+  erreserba sortu/aldatu/bertan behera uzten duenean: **Mahaiak** mapa eta
+  **Erreserbak** zerrenda automatikoki freskatzen dira. **Erreserbak**
+  pestañan data derrigorrezkoa da (gaurtik aurrera); mapako formularioan,
+  aldiz, data gabe utz daiteke.
 - `TxtAbisua` eremuak errore-mezuak eta berrespenak erakusten ditu.

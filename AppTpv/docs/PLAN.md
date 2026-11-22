@@ -9,7 +9,7 @@
   - Mesa, Reserva (`fecha` NULL = data gabe, `turno` bazkaria/afaria)
   - Producto **stock** eta **ingredientes** (osagaiak) eremuekin
   - Pedido/LineaPedido (ticket-a + kobratzean stocka murriztu)
-- [x] `DatuBasea.Hasieratu()`-ek BD bera sortzen du lehen abiaraztean
+- [x] `DatuBasea.Hasi()`-ek BD bera sortzen du lehen abiaraztean
 - [x] Idazketen lock globala (`IdazketaBlokeoa`) prest (enuntziatuaren konkurrentzia-eskakizuna)
 - [x] Haziak: 17 erabiltzaile (`admin` + 15 berri, pasahitza `1234`), 7 mahai (4 laguneko 2, 6 laguneko 2, 10 laguneko 3), 21 produktu
 - [x] Egiaztatuta: `dotnet run` → `BD OK -> erabiltzaileak=17 mahaiak=7 produktuak=21`
@@ -22,10 +22,11 @@
       gehienez 10 bezero aldi berean (11.a `{"errorea":"SESSION_LIMIT"}` mezuarekin baztertzen da), bezero bakoitzeko hari bat
 - [x] `Sarea/BezeroKonexioa.cs`: JSON framing-a (lerro bat = mezu bat), token/ekintzaren araberako banaketa, LOGOUT
 - [x] `Zerbitzuak/Saioak.cs`: GUID tokena LOGIN ondoren, mapa konkurrentea, saio-kontagailua
-- [x] `Zerbitzuak/EragiketaKudeatzailea.cs`: protokoloko **20 ekintza** rol-guardekin
+- [x] `Zerbitzuak/EragiketaKudeatzailea.cs`: protokoloko **22 ekintza** rol-guardekin
       (`AdminEskatzenDu` / `SaioaEskatzenDu`), idazketa-lock globala + transakzioak
-      (gerora 2 ekintza berri gehitu dira: `PEDIDO_REKUPERATU` eta `PEDIDO_MAHAIA_ESLEITU`)
-- [x] `Programa.cs`-ek BD + TCP abiarazten ditu; `parar` komandoa ixteko
+      (`PEDIDO_REKUPERATU` eta `PEDIDO_MAHAIA_ESLEITU` barne)
+- [x] `Programa.cs`-ek BD + TCP abiarazten ditu; `ITZALI` komandoa iragartzen da,
+      baina `ToLower() == "ITZALI"` konparazioak ez du bat egiten: `Ctrl+C` erabili
 
 ### Probekin zuzendutako akatsak
 
@@ -66,13 +67,13 @@ AppTpv/ZerbitzariaTPV/bin/Debug/net10.0/data/tpv.db   (ezabatuz gero haziekin bi
 Eskaeraren iraunkortasuna eta mahaien mapa:
 
 - [x] `Pedido.idMesa` zutabe nullable + FK `Mesa(id)` (`Eskema.sql`) eta
-      `DatuBasea.Hasieratu()`-eko migrazio idempotentea (datuak galdu gabe)
+      `DatuBasea.Hasi()`-eko migrazio idempotentea (datuak galdu gabe)
 - [x] `PEDIDO_REKUPERATU`: ordaindu gabeko eskaera eta haren osagai-zerrenda
       BDtik itzultzen ditu. `KontsumizioIkuspegia.Loaded`-en deitzen da: saioa
       itxi/ireki ondoren —gailu berean nahiz bestean— osagaiak berriro agertzen dira
 - [x] `PEDIDO_MAHAIA_ESLEITU` + `CboMahaiak`/`BtnMahiaEsleitu` kontsumizio-fitxan
 - [x] `MahaiMapaIkuspegia` 6. interfazea `LeihoNagusia`-n fitxa gisa (7 mahai,
-      `librea`/`erreserbatuta`/`okupatuta` + eskaera zenbakia, **Freskatu** botoia)
+      `librea`/`erreserbatuta`/`okupatuta` + eskaera zenbakia, **Freskatu** botoia; gerora komentatuta, ikus 4. fasea)
 - [x] `MESAS_LISTA` luzatu da: `erreserbak`, `eskaeraId` eta `egoera` gako berriak,
       lehenengo hiru gakoak (`id`, `mahaiZenbakia`, `edukiera`) mantenduz
 - [x] Jabetza-guardak: eskaera irekiak sortzaileak/admin-ek soilik ikusi/aldatu
@@ -94,7 +95,37 @@ Eskaeraren iraunkortasuna eta mahaien mapa:
 - Proben ondoren BD jatorrizko egoerara itzuli da (3 eskaera: 1 `cobrada`, 2 `anulada`;
   0 eskaera ireki, 0 `idMesa` esleituta, 7 mahai)
 
+## 4. Fasea — Osatuta ✅ (2026/11/22)
+
+Erreserben sinkronizazioa eta data-iragazkia (azken 4 kommitetan ezarria):
+
+- [x] `Sarea/TCPZerbitzaria.cs`: konektatutako bezeroen
+      `ConcurrentDictionary` erregistroa; `RESERVA_CREAR`, `RESERVA_MODIFICAR`
+      edo `RESERVA_BORRAR` arrakastatsuen ondoren `ERRESERBAK_ALDATU` lerroa
+      bezero guztiei bidaltzen zaie
+- [x] `Sarea/BezeroKonexioa.cs`: erantzunak eta jakinarazpenak konexio bereko
+      `_idazketaBlokeoa`-rekin idazten dira, socket-ean lerroak nahas ez daitezen
+- [x] `BezeroaWPF/Zerbitzuak/Konexioa.cs`: atzeko irakurketa-haria
+      (`BlockingCollection<string>`), jakinarazpenak iragazi eta
+      `DatuakAldatuDira` gertaera; `Itxi()`-ek irakurketa bertan behera uzten du
+- [x] `MESAS_LISTA`-k `data` parametroa onartzen du (lehenespenez gaurkoa):
+      mapak data horretako erreserbak zenbatzen ditu; eskaera irekiak beti
+      `okupatuta` agertzen dira
+- [x] `ErreserbaIkuspegia`: `DtpData` (gaurtik aurrera, derrigorrezkoa) eta
+      `CboPertsonaKopurua` (mahien edukierara mugatua); bezero-izena saiotik
+      betetzen da; jakinarazpenetan eta tokiko aldaketetan freskatzen da
+- [x] `MahaiMapaIkuspegia`: mahi batean klik egitean erreserba-formularioa,
+      `DtpDataIragazkia`, erreserben `GridErreserbak` eta freskatze automatikoa;
+      `BtnFreskatu` XAML-en komentatuta geratu da
+- [x] Dokumentazioa eguneratu: `README.md`, `PROTOCOLO.md`, `GIDA_TEKNIKOA.md`,
+      gidak, aurkezpena, hizkuntza-plana eta `Dokumentuak/Analisi_Teknikoa.pdf`
+
+Probak: aurreko faseetako TCP smoke-testak mantentzen dira. Jakinarazpen-bidea
+egiaztatzeko, bi bezero aldi berean konektatu eta batek erreserba sortzea da
+proba zuzena: besteak bere mapa eta zerrenda automatikoki eguneratu behar ditu,
+erantzun-ilara desinkronizatu gabe.
+
 ## Hurrengo geltokia
 
-Ez dago zeregin irekirik. Defentsan erakusteko, `docs/AURKEZPENA_...md` eta
-`docs/Proiektua.pdf` erabil daitezke.
+Ez dago zeregin irekirik. Defentsan erakusteko, `docs/AURKEZPENA_...md`,
+`docs/Proiektua.pdf` eta `Dokumentuak/Analisi_Teknikoa.pdf` erabil daitezke.

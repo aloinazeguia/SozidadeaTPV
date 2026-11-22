@@ -140,7 +140,8 @@ Kodeko mezuak `Testua("ErroreaSaioa")` bidez eskuratzen dira.
 | `Leihoak/LeihoNagusia.xaml(.cs)` | Pestañak, `Amaitu saioa`, hizkuntza-hautatzailea |
 | `Leihoak/KopuruLeihoa.xaml(.cs)` | Izenburua, `Onartu`/`Utzi`, `MessageBox` |
 | `Ikuspegiak/KontsumizioIkuspegia.xaml(.cs)` | Kategoriak, botoiak, `AGORTUTA`, `KOBRATU`, `IKUSI TIKETA`, txartela |
-| `Ikuspegiak/ErreserbaIkuspegia.xaml(.cs)` | Formularioa, botoiak, zutabe-goiburuak, `TxtAbisua` |
+| `Ikuspegiak/ErreserbaIkuspegia.xaml(.cs)` | Formularioa (`DtpData`, `CboPertsonaKopurua` barne), botoiak, zutabe-goiburuak, `TxtAbisua`, "Data derrigorrezkoa..." mezua |
+| `Ikuspegiak/MahaiMapaIkuspegia.xaml(.cs)` | Data-iragazkia, `FormaPanel` (erreserba-formularioa), `GridErreserbak`, botoiak, `TxtAbisua` / `TxtErreserbaAbisua` mezuak |
 | `Ikuspegiak/IzakinIkuspegia.xaml(.cs)` | Formularioa, botoiak, erroreak |
 | `Ikuspegiak/ErabiltzaileIkuspegia.xaml(.cs)` | Formularioa, rola: `Administratzailea`/`Erabiltzailea` → `Administrador`/`Usuario` |
 | `Zerbitzuak/Ereduak.cs` | `RolErakutsi`/`AktiboErakutsi` propietateak hizkuntzaren arabera |
@@ -193,7 +194,7 @@ Bi hizkuntzetan erakusteko:
 
 ## 7. Probak
 
-- [ ] `EU` → `ES` aldatzean, 5 interfazeetako testuak berehala eguneratzen dira.
+- [ ] `EU` → `ES` aldatzean, 6 interfazeetako testuak berehala eguneratzen dira (mahaien mapa barne).
 - [ ] Hizkuntza hautaketa gorde egiten da (`hizkuntza.txt` / `Settings`) eta
       hurrengo abiaraztean mantentzen da.
 - [ ] `RolErakutsi`: `Administratzailea`/`Erabiltzailea` ↔ `Administrador`/`Usuario`,
@@ -225,5 +226,5 @@ mapearlos en el cliente (opción A); la alternativa es añadir recursos `.resx`
 en el servidor y un campo `hizkuntza` en la petición (opción B).
 
 Tras implementarlo, hay que verificar que el cambio de idioma actualiza las
-cinco interfaces al instante, que la preferencia persiste y que las pruebas
+seis interfaces al instante (incluido el mapa de mesas), que la preferencia persiste y que las pruebas
 TCP siguen funcionando con las mismas claves.

@@ -46,15 +46,18 @@ flowchart LR
 - Zerbitzaria `ZerbitzariaTPV/Programa.cs`-en hasten da:
 
 ```csharp
-DatuBasea.Hasieratu();                                  // DB sortu/haziak
-var servidor = new Thread(TCPZerbitzaria.Instancia.Abiarazi) { IsBackground = true };
+DatuBasea.Hasi();                                       // DB sortu/haziak
+var (laburpena, _) = DatuBasea.Egiaztatu();               // "BD OK -> ..." loga
+var servidor = new Thread(TCPZerbitzaria.ZerbitzariHaria.Abiarazi) { IsBackground = true };
 servidor.Start();                                         // entzuteko harixa
-while (true) { if (Console.ReadLine() == "parar") ... }   // prozesua bizirik mantendu
+while (true) { if (Console.ReadLine()?.Trim().ToLower() == "ITZALI") ... }
 ```
 
 - `IsBackground = true`: prozesua itxi daiteke hari horiek amaitu gabe.
-- Amaitzeko: `parar` + Enter edo `Ctrl+C`. Bezeroak `LOGOUT` bidaltzen du
-  `App.xaml.cs`-eko `App_Exit`-en, bere lekua askatzeko.
+- Amaitzeko: **`Ctrl+C`** (kontsolak `ITZALI` iragartzen duen arren,
+  `ToLower() == "ITZALI"` konparazioak ezin du bat egin eta komandoak ez du
+  funtzionatzen). Bezeroak `LOGOUT` bidaltzen du `App.xaml.cs`-eko
+  `Aplikazioa_Irten`-en, bere lekua askatzeko.
 
 **Zergatik banatu prozesuetan?** Datuak zentralizatzeko, baimenak leku bakarrean
 egiaztatzeko (`admin` vs `usuario`) eta hainbat makina aldi berean konektatzeko.
@@ -85,7 +88,7 @@ flowchart TB
 | Entzuketa | `Sarea/TCPZerbitzaria.cs` | Socket-a ireki, 10 bezero onartu, hari bat sortu bakoitzerako |
 | Protokoloa | `Sarea/BezeroKonexioa.cs` | Lerroa irakurri, JSON parsedu, `ekintza` eta `token` atera, erantzuna idatzi |
 | Saioak | `Zerbitzuak/Saioak.cs` | Token GUID → erabiltzailea/rola; `ConcurrentDictionary` |
-| Negozioa | `Zerbitzuak/EragiketaKudeatzailea.cs` | 22 ekintza + `LOGOUT`, `AdminEskatzenDu` / `SaioaEskatzenDu`, transakzioak, eskaeren jabetza-guardak |
+| Negozioa | `Zerbitzuak/EragiketaKudeatzailea.cs` | 22 ekintza + `LOGOUT`, `AdminEskatzenDu` / `SaioaEskatzenDu`, transakzioak, eskaeren jabetza-guardak; `MESAS_LISTA`-k data-iragazkia aplikatzen du |
 | Datuak | `Datuak/DatuBasea.cs` | SQLite konexioa, eskema, haziak, `IdazketaBlokeoa` |
 | Segurtasuna | `Datuak/Segurtasuna.cs` | SHA-256 + gatz finkoa |
 | Garraioa (bezeroa) | `Zerbitzuak/Konexioa.cs` | `TcpClient`, bidali/jaso, konexioa berriro ireki |
@@ -102,7 +105,7 @@ bakarrik dago; bezeroak pestañak ezkutatzea aurkezpena baino ez da.
 
 | Haria | Non sortzen da | Zer egiten du |
 |---|---|---|
-| Zerbitzariaren hari nagusia | `Programa.cs` | DB hasieratu, entzule-haria abiarazi, kontsolaren `parar` irakurri |
+| Zerbitzariaren hari nagusia | `Programa.cs` | DB hasieratu, entzule-haria abiarazi, kontsolaren `ITZALI` irakurri |
 | Entzule-haria | `Programa.cs` → `TCPZerbitzaria.Abiarazi()` | `AcceptTcpClient()` etengabe; bezero berri bakoitzeko hari bat sortu |
 | Arreta-haria ×N | `TCPZerbitzaria.cs` → `BezeroKonexioa.Artatu()` | Bezero baten mezuak irakurri eta erantzun (blokeatzailea) |
 | WPF UI-haria | Bezeroaren prozesua | XAML kontrolak, klik-gertaerak, `TxtAbisua`, `Grid...` eguneraketak |
@@ -133,8 +136,11 @@ sequenceDiagram
 |---|---|---|
 | `Interlocked.Increment/Decrement(ref _bezeroak)` | `TCPZerbitzaria.cs` | Hainbat hari aldi berean kontadorea aldatzen ari dira; `++` ez da atomikoa |
 | `ConcurrentDictionary` | `Saioak.cs` | Tokenak hari desberdinetatik gehitu/ezabatu/kontsultatzen dira |
+| `ConcurrentDictionary` | `TCPZerbitzaria.cs` | Konektatutako bezeroen erregistroa, `ERRESERBAK_ALDATU` jakinarazpenak bidaltzeko |
 | `lock (DatuBasea.IdazketaBlokeoa)` | `DatuBasea.cs` | DB idazketak serializatu; erronkak berak baimentzen du lock bakarra |
+| `lock (_idazketaBlokeoa)` | `BezeroKonexioa.cs` (zerbitzaria) | Erantzunak eta jakinarazpenak socket berean elkarrekin nahas ez daitezen |
 | `lock (_blokeoa)` | `Konexioa.cs` (bezeroa) | Bi gertaerk aldi berean bidali ez ditzaten socket berean |
+| `BlockingCollection<string>` + `Task.Run` | `Konexioa.cs` (bezeroa) | Erantzunak atzeko hari batean jaso; jakinarazpenak bereizi (erantzun-ilara ez desinkronizatzeko) |
 | `IsBackground = true` | hari guztiak | Prozesua itxi ahal izateko |
 
 **Ohartarazpen zintzoa:** bezeroaren `Konexioa.Bidali()` sinkronoa da (erantzuna
@@ -189,6 +195,18 @@ Erantzuna:
 {"arrakasta":true,"datuak":{"erreserbaId":7,"mezua":"Reserva creada"}}
 ```
 
+Eta erreserba horrek eragindako **jakinarazpena**, bezero guztientzat
+(bezeroak ez du eskatu, zerbitzariak bidaltzen du):
+
+```json
+{"ekintza":"ERRESERBAK_ALDATU","arrakasta":true,"datuak":{}}
+```
+
+Bezeroaren `Konexioa`-k lerro hau irakurtzen duen atzeko hariak ez du
+erantzun-ilaran sartzen: `DatuakAldatuDira` gertaera altxatzen du, eta
+`ErreserbaIkuspegia` / `MahaiMapaIkuspegia` ikuspegiek beren datuak berriro
+kargatzen dituzte. Horrela, erantzun bati dagokion lerroa ez da nahasten.
+
 ### 10 bezeroen muga
 
 `AcceptTcpClient()` ondoren `Interlocked.Increment` egiten da. 10 baino gehiago
@@ -210,6 +228,11 @@ badira, 11.ari honako hau bidali eta socket-a berehala itxi egiten zaio:
 `Konexioa.Bidali()`-ek `SocketException` / `IOException` harrapatu, `Itxi()`
 deitu eta `Ezin izan da zerbitzariarekin konektatu. Egiaztatu konexioa eta saiatu berriro.` mezua itzultzen du.
 Hurrengo eskaeran `KonexioaBermatu()` berriro konektatzen saiatzen da.
+Atzeko irakurketa-hariak konexioa galdu dela antzematen badu, erantzun-ilaran
+lerro hutsa (`""`) jartzen du eta `Bidali`-ek
+`Zerbitzariak konexioa itxi du.` / `Zerbitzariarekiko konexioa galdu da.`
+erantzunak itzultzen ditu; `Itxi()`-ek `CancellationTokenSource` bidez gelditzen
+du irakurketa.
 
 Zerbitzariaren aldean, `BezeroKonexioa.Artatu()`-k `try/finally` blokea du:
 socket-a ixten denean (prozesua kraskatu edo konexioa galdu arren) konexio
@@ -250,7 +273,10 @@ sequenceDiagram
     GO-->>AT: Emaitza.Ondo
     AT-->>CX: JSON + \n (WriteLine)
     CX-->>UI: Erantzuna { Arrakasta, Datuak }
-    UI->>UI: TxtAbisua = "Reserva creada" + GridErreserbak freskatu
+    UI->>UI: TxtAbisua = "Erreserba sortu da." + GridErreserbak freskatu
+    AT->>AT: JakinaraziErreserbaAldaketa()
+    AT-->>C2: ERRESERBAK_ALDATU (eskatuta ez dagoen lerroa)
+    C2->>C2: DatuakAldatuDira → mapa + zerrenda freskatu
 ```
 
 ---
@@ -278,7 +304,11 @@ sequenceDiagram
 > `BezeroKonexioa` protokoloaz, `Saioak` tokenaz, `EragiketaKudeatzailea`
 > negozioaz eta rol-egiaztapenez, eta `DatuBasea` datuaz. Hori dela eta,
 > erabiltzaile arrunt batek ezin du admin-ekintzarik egin, nahiz eta bezeroan
-> pestañak ezkutatuta egon."
+> pestañak ezkutatuta egon. Gainera, erreserba aldatzen denean zerbitzariak
+> `ERRESERBAK_ALDATU` jakinarazpena bidaltzen die gainerako bezeroei;
+> konexio bakoitzeko idazketa-lockak erantzunekin nahas ez daitezen bermatzen
+> du, eta bezeroaren irakurketa-hariak bereizten ditu erantzun-ilara
+> desinkronizatu gabe."
 
 ---
 
@@ -299,6 +329,9 @@ sequenceDiagram
 | Zer gertatzen da saioa itxi/ireki ondoren eskaerarekin? | Osagaiak BDn daude gordeta; `PEDIDO_REKUPERATU`-k eskaera irekia eta lerroak berreskuratzen ditu, gailuz aldatuta ere. |
 | Beste erabiltzaile batek ikus al ditzake nire osagaiak? | Ez. Zerbitzariak jabetza egiaztatzen du: `Eskaera hori ez da zurea`. Admin-ek soilik du salbuespena. |
 | Nola erakusten da mahien egoera? | `MahaiMapaIkuspegia` fitxak `MESAS_LISTA` erabiltzen du: 7 mahai, `librea`/`erreserbatuta`/`okupatuta` + eskaera zenbakia. Eskaera kobratzean mahia libre bihurtzen da. |
+| Zer da `ERRESERBAK_ALDATU`? | Zerbitzariak erreserba aldaketa baten ondoren bezero guztiei bidaltzen dien jakinarazpena. Bezeroak ez du erantzun gisa hartzen: `DatuakAldatuDira` gertaera altxatu eta UI-a freskatzen du. |
+| Nola iragazten dira erreserbak mapan? | `DtpDataIragazkia`-k data aukeratzen du; `MESAS_LISTA`-k data horretako erreserba aktiboak zenbatzen ditu (data gabekoak beti) eta `RESERVA_LISTA`-k zerrenda ekartzen du. |
+| Nola gelditzen da zerbitzaria? | `Ctrl+C` erabili. Kontsolak `ITZALI` iragartzen du, baina `ToLower() == "ITZALI"` konparazioak ez du bat egiten. |
 
 ---
 
@@ -307,17 +340,21 @@ sequenceDiagram
 | Kontzeptua | Fitxategia / lerroak |
 |---|---|
 | DB hasieratu + hari nagusiaren hasiera | `ZerbitzariaTPV/Programa.cs` 11–15 |
-| Ataka eta 10 bezeroen konstanteak | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 15–16 |
-| `AcceptTcpClient` + `Interlocked` + `SESSION_LIMIT` | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 41–55 |
-| Bezero bakoitzeko harixa | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 59–85 |
-| Socket-a, `ReadLine`/`WriteLine`, JSON parse | `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` 25–110 |
-| `LOGOUT` + `finally`-bidezko token-garbiketa | `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` 55–63, 86–90, 101–110 |
+| Ataka eta 10 bezeroen konstanteak | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 18–20 |
+| `AcceptTcpClient` + `Interlocked` + `SESSION_LIMIT` | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 57–82 |
+| Bezero bakoitzeko harixa | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` 87–104 |
+| Konexio-erregistroa + `ERRESERBAK_ALDATU` banaketa | `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` (`_konexioak`, `JakinaraziErreserbaAldaketa`) |
+| Socket-a, `ReadLine`/`WriteLine`, JSON parse | `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` 33–98 |
+| Erantzun/jakinarazpen-idazketaren locka | `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` (`_idazketaBlokeoa`, `JakinarazpenaBidali`) |
+| `LOGOUT` + `finally`-bidezko token-garbiketa | `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` 58–69, 117–123 |
 | Saioen mapa konkurrentea | `ZerbitzariaTPV/Zerbitzuak/Saioak.cs` 28 |
 | Rol guardak + jabetza-guardak | `ZerbitzariaTPV/Zerbitzuak/EragiketaKudeatzailea.cs` 78–89 |
 | Eskaera berreskuratu / mahia esleitu | `EragiketaKudeatzailea.cs` 704, 782 |
 | Idazketa-lock bakarra | `ZerbitzariaTPV/Datuak/DatuBasea.cs` 22, `EragiketaKudeatzailea.cs` 1030 |
 | `Pedido.idMesa` migrazioa | `ZerbitzariaTPV/Datuak/DatuBasea.cs` 39–58 |
-| Bezeroaren socket-a + timeout + lock | `BezeroaWPF/Zerbitzuak/Konexioa.cs` 53, 90 |
+| Bezeroaren socket-a + timeout + lock | `BezeroaWPF/Zerbitzuak/Konexioa.cs` (`KonexioaBermatu`, `_blokeoa`) |
+| Atzeko irakurketa + jakinarazpen-iragazkia | `BezeroaWPF/Zerbitzuak/Konexioa.cs` (`HasiIrakurketa`, `DatuakAldatuDira`) |
 | Saioa irekitzean osagaiak berreskuratu | `BezeroaWPF/Ikuspegiak/KontsumizioIkuspegia.xaml.cs` (`EskaeraBerreskuratu`) |
-| Mahaien mapa | `BezeroaWPF/Ikuspegiak/MahaiMapaIkuspegia.xaml(.cs)` |
+| Erreserbak: data derrigorrezkoa + kopuru mugatua | `BezeroaWPF/Ikuspegiak/ErreserbaIkuspegia.xaml(.cs)` (`DtpData`, `CboPertsonaKopurua`) |
+| Mahaien mapa: data-iragazkia + erreserba-formularioa | `BezeroaWPF/Ikuspegiak/MahaiMapaIkuspegia.xaml(.cs)` |
 | UI-haria / saioa ixtea | `BezeroaWPF/App.xaml.cs` 19–25 |

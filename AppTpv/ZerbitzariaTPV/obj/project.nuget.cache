@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "ANH8g659TCc=",
+  "dgSpecHash": "5f0xkNI3YSg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\anetxu\\Desktop\\SozidadeaTPV\\AppTpv\\ZerbitzariaTPV\\ZerbitzariaTPV.csproj",
+  "projectFilePath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/ZerbitzariaTPV/ZerbitzariaTPV.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\anetxu\\.nuget\\packages\\microsoft.data.sqlite\\10.0.14\\microsoft.data.sqlite.10.0.14.nupkg.sha512",
-    "C:\\Users\\anetxu\\.nuget\\packages\\microsoft.data.sqlite.core\\10.0.14\\microsoft.data.sqlite.core.10.0.14.nupkg.sha512",
-    "C:\\Users\\anetxu\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.13\\sqlitepclraw.bundle_e_sqlite3.2.1.13.nupkg.sha512",
-    "C:\\Users\\anetxu\\.nuget\\packages\\sqlitepclraw.core\\2.1.13\\sqlitepclraw.core.2.1.13.nupkg.sha512",
-    "C:\\Users\\anetxu\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.13\\sqlitepclraw.lib.e_sqlite3.2.1.13.nupkg.sha512",
-    "C:\\Users\\anetxu\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.13\\sqlitepclraw.provider.e_sqlite3.2.1.13.nupkg.sha512"
+    "/Users/Anetxu/.nuget/packages/microsoft.data.sqlite/10.0.14/microsoft.data.sqlite.10.0.14.nupkg.sha512",
+    "/Users/Anetxu/.nuget/packages/microsoft.data.sqlite.core/10.0.14/microsoft.data.sqlite.core.10.0.14.nupkg.sha512",
+    "/Users/Anetxu/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.13/sqlitepclraw.bundle_e_sqlite3.2.1.13.nupkg.sha512",
+    "/Users/Anetxu/.nuget/packages/sqlitepclraw.core/2.1.13/sqlitepclraw.core.2.1.13.nupkg.sha512",
+    "/Users/Anetxu/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.13/sqlitepclraw.lib.e_sqlite3.2.1.13.nupkg.sha512",
+    "/Users/Anetxu/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.13/sqlitepclraw.provider.e_sqlite3.2.1.13.nupkg.sha512"
   ],
   "logs": []
 }

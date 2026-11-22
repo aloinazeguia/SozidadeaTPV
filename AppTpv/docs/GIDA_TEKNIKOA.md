@@ -25,22 +25,29 @@ Hizkuntzen (EU/ES) aldaketarako plana: [hizkuntzak](hizkuntzak.md).
 - **Bezero bakoitzeko hari bat** (`TCPZerbitzaria.cs`): zerbitzariak erantzuten
   ari den bitartean beste bezeroek eta UI-ak normal funtzionatzen dute.
 - Bezeroak konexio bakarra mantentzen du (`Konexioa.cs`), bidalketak `_blokeoa`
-  batekin serializatzen dira.
+  batekin serializatzen dira. Erantzunak, aldiz, atzeko irakurketa-hari batek
+  jasotzen ditu `BlockingCollection` batean; horri esker zerbitzaritik
+  abiatutako jakinarazpenak erantzun arruntetatik bereiz daitezke.
+- **Erreserben sinkronizazioa:** `RESERVA_CREAR`, `RESERVA_MODIFICAR` edo
+  `RESERVA_BORRAR` arrakastatsu baten ondoren, zerbitzariak
+  `ERRESERBAK_ALDATU` lerroa bidaltzen die konektatutako bezero guztiei.
+  Bezeroak `DatuakAldatuDira` gertaera altxatzen du, mahaien mapak eta
+  erreserben zerrendek beren kabuz freskatzeko (erantzun-ilara nahastu gabe).
 
 ## 2. Fitxategien mapa
 
 | Fitxategia | eginkizuna |
 |---|---|
-| `ZerbitzariaTPV/Programa.cs` | BD hasieratu + TCP abiarazi; `parar` komandoa |
-| `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` | Entzulea, 10 bezeroen mugra, hari bana |
-| `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` | Lerroen irakurketa, JSON parsing, dispatch |
+| `ZerbitzariaTPV/Programa.cs` | BD hasieratu (`DatuBasea.Hasi()`) + TCP abiarazi; `ITZALI` komandoa (ikus 10. atala) |
+| `ZerbitzariaTPV/Sarea/TCPZerbitzaria.cs` | Entzulea, 10 bezeroen mugra, hari bana, konexio-erregistroa eta `ERRESERBAK_ALDATU` banaketa |
+| `ZerbitzariaTPV/Sarea/BezeroKonexioa.cs` | Lerroen irakurketa, JSON parsing, dispatch, erantzun-idazketa blokeatua eta jakinarazpenak |
 | `ZerbitzariaTPV/Zerbitzuak/EragiketaKudeatzailea.cs` | Ekintza guztien logika + rol guardak |
 | `ZerbitzariaTPV/Zerbitzuak/Saioak.cs` | Tokenen mapa konkurrentea |
 | `ZerbitzariaTPV/Zerbitzuak/Emaitza.cs` | `{ arrakasta, datuak, errorea }` emaitza |
 | `ZerbitzariaTPV/Datuak/DatuBasea.cs` | Konexioa, eskema, haziak, `Pedido.idMesa` migrazioa, `IdazketaBlokeoa` |
 | `ZerbitzariaTPV/Datuak/Eskema.sql` | Taulak, indizeak (`idx_pedido_mesa`), WAL |
 | `ZerbitzariaTPV/Datuak/Segurtasuna.cs` | SHA-256 + gatz finkoa |
-| `BezeroaWPF/Zerbitzuak/Konexioa.cs` | Bezeroaren TCP konexioa |
+| `BezeroaWPF/Zerbitzuak/Konexioa.cs` | Bezeroaren TCP konexioa, atzeko irakurketa, `DatuakAldatuDira` gertaera |
 | `BezeroaWPF/Zerbitzuak/Saioa.cs` | Token/rol lokala |
 | `BezeroaWPF/Zerbitzuak/Ereduak.cs` | JSON → objektuen mapaketa |
 | `BezeroaWPF/Leihoak/*.xaml` | Login, nagusia, kantitate leihoa |
@@ -49,7 +56,7 @@ Hizkuntzen (EU/ES) aldaketarako plana: [hizkuntzak](hizkuntzak.md).
 ## 3. Datu-basea (SQLite)
 
 `data/tpv.db` fitxategia `AppContext.BaseDirectory`en sortzen da.
-`DatuBasea.Hasieratu()`-ek `Eskema.sql` exekutatzen du (dena `IF NOT EXISTS`)
+`DatuBasea.Hasi()`-ek `Eskema.sql` exekutatzen du (dena `IF NOT EXISTS`)
 eta, fitxategia berria bada, haziak txertatzen ditu.
 
 | Taula | Helburua | Zutabe garrantzitsuak |
@@ -67,7 +74,7 @@ eta, fitxategia berria bada, haziak txertatzen ditu.
   `Reserva.estado = 'cancelada'`. Horrela ticketen historia ez da apurtzen.
 - Indizeak: `(fecha, turno)`, `(idMesa, fecha)`, `(idPedido)`, `(idMesa, estado)`.
 
-`DatuBasea.Hasieratu()`-ek **migrazio idempotentea** exekutatzen du eskema baino
+`DatuBasea.Hasi()`-ek **migrazio idempotentea** exekutatzen du eskema baino
 lehen: lehendik dauden DBetan `Pedido.idMesa` zutabea gehitzen du
 (`ALTER TABLE ... ADD COLUMN`, NULL onargarria → ez da daturik galtzen).
 `Eskema.sql`-en zutabea eta `idx_pedido_mesa` indizea jada daude DB berrietan.
@@ -126,8 +133,9 @@ baimena egiaztatzen du `AdminEskatzenDu` / `SaioaEskatzenDu` guardekin.
 | `PRODUCTO_AGREGAR` / `_MODIFICAR` / `_BORRAR` | admin | `IzakinIkuspegia` |
 | `STOCK_MODIFICAR` | admin | `IzakinIkuspegia.BtnIzakinak_Click` |
 | `USUARIOS_LISTA` / `USUARIO_CREAR` / `_MODIFICAR` / `_BORRAR` | admin | `ErabiltzaileIkuspegia` |
-| `MESAS_LISTA` | saioa | `ErreserbaIkuspegia`, `KontsumizioIkuspegia`, `MahaiMapaIkuspegia` |
-| `RESERVA_CREAR` / `_MODIFICAR` / `_BORRAR` / `_LISTA` | saioa | `ErreserbaIkuspegia` |
+| `MESAS_LISTA` (`data` aukerakoa: lehenespenez gaurkoa) | saioa | `ErreserbaIkuspegia`, `KontsumizioIkuspegia`, `MahaiMapaIkuspegia` |
+| `RESERVA_CREAR` / `_MODIFICAR` / `_BORRAR` / `_LISTA` | saioa | `ErreserbaIkuspegia`, `MahaiMapaIkuspegia` (erreserba berria mapatik) |
+| `ERRESERBAK_ALDATU` | jakinarazpena (ez deitzen da) | `Konexioa` → `DatuakAldatuDira` → `ErreserbaIkuspegia` / `MahaiMapaIkuspegia` |
 | `PEDIDO_ABRIR` | saioa | `KontsumizioIkuspegia.EskaeraIrekiaBermatu` |
 | `PEDIDO_AGREGAR_LINEA` | saioa (jabea/admin) | `KontsumizioIkuspegia.BtnBidali_Click` |
 | `PEDIDO_REKUPERATU` | saioa (jabea/admin) | `KontsumizioIkuspegia.EskaeraBerreskuratu` (Loaded) |
@@ -138,10 +146,21 @@ baimena egiaztatzen du `AdminEskatzenDu` / `SaioaEskatzenDu` guardekin.
 
 Guztira **22 ekintza + `LOGOUT`**. `LOGOUT` ez dago `EragiketaKudeatzailea`-en:
 `BezeroKonexioa.cs`-ek kudeatzen du zuzenean, tokena saioen mapatik kentzeko.
+`ERRESERBAK_ALDATU` ez da bezeroak dei dezakeen ekintza: zerbitzariak berak
+abiarazitako jakinarazpena da, goiko taulan informazio gisa soilik agertzen dena.
+
+`MESAS_LISTA`-k `datuak.data` (`YYYY-MM-DD`) onartzen du; hutsik badago gaurko
+data erabiltzen da. Mapak erreserba aktiboak data horren arabera zenbatzen ditu
+(data gabeko erreserbak beti kontatzen dira) eta eskaera irekiak `okupatuta`
+egoeran mantentzen dira data edozein dela ere.
 
 `BezeroKonexioa.Artatu()`-ren `try/finally` blokeak socket-a ixten denean
 konexio horretan sortutako token guztiak ezabatzen ditu, LOGOUT esplizitua ez badago
-ere (`[SESION] Konexioa itxita: N token garbituta`). 10 bezeroen muga aldatu gabe dago.
+ere (`[SESION] Konexioa itxita: N token garbituta`). Gainera, konexioa
+`TCPZerbitzaria`-ren `ConcurrentDictionary`-ean erregistratzen da jakinarazpenak
+bidali ahal izateko, eta `finally` blokeak erregistroa kentzen du. Erantzunak zein
+jakinarazpenak konexio bereko `_idazketaBlokeoa`-rekin idazten dira, socketean
+lerroak elkarrekin nahas ez daitezen. 10 bezeroen muga aldatu gabe dago.
 
 Xehetasunak: [PROTOCOLO.md](PROTOCOLO.md).
 
@@ -155,8 +174,8 @@ Erronkak 5 interfaze eskatzen ditu; horiei **mahaien mapa** (6. fitxa) gehitu za
 | 2 | Erabiltzaileen kudeaketa | `Ikuspegiak/ErabiltzaileIkuspegia.xaml` | `TxtErabiltzailea`, `TxtPasahitza`, `TxtIzena`, `CboRola`, `GridErabiltzaileak` |
 | 3 | Biltegiaren kudeaketa | `Ikuspegiak/IzakinIkuspegia.xaml` | `TxtIzena`, `TxtPrezioa`, `TxtIzakinak`, `TxtOsagaiak`, `TxtKategoria`, `GridProduktuak`, `TxtIzakinBerriak` |
 | 4 | Interfaze nagusia | `Ikuspegiak/KontsumizioIkuspegia.xaml` | `ListaKategoriak`, `ListaProduktuak`, `ListaEskaera`, `CboMahaiak`, `BtnMahiaEsleitu`, `BtnBidali`, `BtnAzpitotala`, `BtnKobratu`, `BtnTxartela` |
-| 5 | Erreserbak | `Ikuspegiak/ErreserbaIkuspegia.xaml` | `CboMahia`, `CboTxanda`, `TxtData`, `TxtPertsonak`, `GridErreserbak` |
-| 6 | Mahaien mapa | `Ikuspegiak/MahaiMapaIkuspegia.xaml` | `ListaMahaiak`, `BtnFreskatu`, `TxtMapaInfo` — 7 mahai, egoera bisualarekin |
+| 5 | Erreserbak | `Ikuspegiak/ErreserbaIkuspegia.xaml` | `CboMahia`, `CboTxanda`, `DtpData` (gaurtik aurrera, derrigorrezkoa), `CboPertsonaKopurua`, `TxtBezeroa`, `GridErreserbak` |
+| 6 | Mahaien mapa | `Ikuspegiak/MahaiMapaIkuspegia.xaml` | `ListaMahaiak`, `DtpDataIragazkia`, `GridErreserbak`, `FormaPanel` (mahian klik egitean erreserba sortzeko), `TxtMapaInfo` — 7 mahai, egoera bisualarekin |
 
 `KontsumizioIkuspegia.Loaded`-ek `MenuaKargatu()`, `MahaiakKargatu()` eta
 `EskaeraBerreskuratu()` deitzen ditu: saioa irekitzean DBn gordetako eskaera irekia
@@ -171,6 +190,9 @@ Osagarriak:
 - `Leihoak/KopuruLeihoa.xaml` — kantitatea eskatzeko leiho laguntzailea.
   Gaur egun `KontsumizioIkuspegia`-ek lerroaren inline editorea erabiltzen du;
   leiho hau ez dago askotan deituta (eskuragarri dago, erabiltzeko prest).
+- `MahaiMapaIkuspegia`-n `BtnFreskatu` botoia XAML-en komentatuta dago:
+  freskatzea automatikoa da (`ERRESERBAK_ALDATU` jakinarazpena) eta
+  `DtpDataIragazkia` / **Eguneratu** kontrolen bidez eskuz ere egin daiteke.
 
 ## 6. Segurtasuna
 
@@ -209,6 +231,16 @@ lock (DatuBasea.IdazketaBlokeoa)   // ZerbitzariaTPV/Datuak/DatuBasea.cs
 
 - Bi erabiltzailek aldi berean taula berean idazten saiatuz gero, bigarrena
   lehena amaitu arte itxaron egiten da.
+- **Lockak ez dira denak berdinak:** `IdazketaBlokeoa` DB idazketetarako da;
+  `BezeroKonexioa._idazketaBlokeoa` konexio bakoitzeko socket-idazketak
+  (erantzunak eta `ERRESERBAK_ALDATU` jakinarazpenak) serializatzeko da;
+  bezeroaren `Konexioa._blokeoa`-k eskaerak bidaltzeko soilik balio du.
+  Irakurketa asinkronoa `BlockingCollection<string>` batean egiten da, eta
+  jakinarazpenak ez dira erantzun-ilaran sartzen, desinkronizazioa saihesteko.
+- `TCPZerbitzaria._bezeroak` kontadorea `Interlocked`-ekin aldatzen da;
+  saio-tokenak eta jakinarazpenetarako konexio-erregistroa
+  `ConcurrentDictionary`-etan daude. Hori gabe, 11. bezeroaren muga eta
+  tokenen garbiketa ez lirateke fidagarriak izango.
 - `Erres_Sortu`, `Eska_LerroGehitu`, `Eska_MahaiEsleitu` eta `Eska_Baieztatu`-ek
   transakzioak erabiltzen dituzte (rollback egiten dute baliozkotzeak huts eginez gero).
 - WAL moduari esker, irakurketak (`PRODUCTOS_LISTA`, `RESERVA_LISTA`,
@@ -268,8 +300,16 @@ exekutatu `AppTpv.exe`.
 
 ### Ezagutzen diren puntuak
 
-- Zerbitzariaren `Cliente desconectado` log-mezua noizean behin desordenatuta
-  agertzen da (kosmetikoa).
+- Zerbitzariaren `[TCP] Bezeroa deskonektatuta` log-mezua noizean behin
+  desordenatuta agertzen da (kontadorea harien artean irakurtzen delako; kosmetikoa).
+- `Programa.cs`-ek `ITZALI` komandoa iragartzen du, baina
+  `ToLower() == "ITZALI"` konparazioak ezin du bat egin; `Ctrl+C` erabili behar da
+  zerbitzaria gelditzeko.
+- `Eska_Irekia`-k eskaera irekia dagoen egiaztatzen du `IdazketaBlokeoa` hartu
+  **aurretik**. Bi bezerok aldi berean `PEDIDO_ABRIR` deituz gero, bi eskaera
+  ireki sor daitezke; idazketa bera lock-ek babestuta dago, baina aurre-egiaztapena ez.
 - `RESERVA_MODIFICAR`-ek ez du berriro egiaztatzen mahaiaren edukiera ez eta
   bikoiztutako erreserba; UI-tik erabiltzen den bidean ez da arazorik sortzen.
+- `TCPZerbitzaria.Berrezarri(ref _bezeroak, BezeroMaximoa)` deia no-op da:
+  metodoak ez du ezer egiten, etorkizuneko resetetarako gordetako tokia baino ez da.
 - `KopuruLeihoa.xaml` leihoa ez dago gaur egun deituta (ikus 5. atala).

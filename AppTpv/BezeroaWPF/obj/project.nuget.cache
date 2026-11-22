@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "LtLvQ9dp7Wk=",
+  "dgSpecHash": "Dks7z4+I3T0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\anetxu\\Desktop\\SozidadeaTPV\\AppTpv\\BezeroaWPF\\BezeroaWPF.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "/Users/Anetxu/Desktop/SozidadeaTPV/AppTpv/BezeroaWPF/BezeroaWPF.csproj",
+  "expectedPackageFiles": [
+    "/Users/Anetxu/.nuget/packages/microsoft.windowsdesktop.app.ref/10.0.12/microsoft.windowsdesktop.app.ref.10.0.12.nupkg.sha512"
+  ],
   "logs": []
 }
